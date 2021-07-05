@@ -4,6 +4,7 @@ import Row from 'react-bootstrap/lib/Row';
 import Col from 'react-bootstrap/lib/Col';
 import EditorSide from './EditorSide';
 import CanvasSide from './CanvasSide';
+import SvgSide from './SvgSide';
 import { LangProps, ProgLangProps, ThemeProps } from './Props';
 import '../css/theme.css';
 import Footer from './Footer';
@@ -36,7 +37,7 @@ export default class App extends React.Component<Props, State> {
             xs={12}
             className={theme === 'light' ? 'theme-light' : 'theme-gray'}
           >
-            <CanvasSide lang={lang} />
+            <SvgSide lang={lang} />
           </Col>
         </Row>
         <Footer fromYear={2018} />

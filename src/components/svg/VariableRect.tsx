@@ -19,6 +19,8 @@ export default class VariableRect extends React.Component<Props, State> {
       const { width, isVisible, key } = cell;
       const x = cell.x();
       const y = cell.y();
+      const marginX = cell.marginX();
+      const marginY = cell.marginY();
       const text = cell.getText();
       const canToggleFold = cell.canToggleFold();
       return (
@@ -26,15 +28,16 @@ export default class VariableRect extends React.Component<Props, State> {
           key={key}
           x={x}
           y={y}
+          marginX={marginX}
+          marginY={marginY}
           text={text}
           width={width}
-          align={canToggleFold ? 'center' : undefined}
           onClick={canToggleFold ? () => cell.toggleFold() : undefined}
           isVisible={isVisible}
           colors={cell.getColors()}
         />
       );
     });
-    return <Group>{list}</Group>;
+    return <React.Fragment>{list}</React.Fragment>;
   }
 }

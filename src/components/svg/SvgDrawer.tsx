@@ -10,10 +10,9 @@ import * as d3 from 'd3';
 export type SvgRow = SvgCell[];
 export type SvgTable = SvgRow[];
 
-
 function sum(arr, len) {
-  var s = 0;
-  for (var i = 0; i < len; i++) {
+  let s = 0;
+  for (let i = 0; i < len; i++) {
     s += arr[i];
   }
   return s;
@@ -254,6 +253,9 @@ export class SvgStack {
   private numOfCol: number = 0;
   private pos: Vector = new Vector(-1, -1);
   private svgTable: SvgTable;
+  private widths: number[];
+  private margin: number;
+  private hasArry: boolean;
   constructor(
     private readonly stack: Stack,
     private readonly getTypedef: (type: string) => string
@@ -288,6 +290,10 @@ export class SvgStack {
     return this.svgTable;
   }
 
+  public getWidths() {
+    return this.widths;
+  }
+
   public name() {
     return this.stack.name;
   }
@@ -310,62 +316,90 @@ export class SvgStack {
       return 0;
     }
     let titleWidth = this.getTitleWidth();
-    let widths = this.getTableWidth();
-    const width = Math.max(titleWidth, sum(widths, widths.length));
+    let widths = this.getWidths();
+    const width =
+      Math.max(titleWidth, sum(widths, widths.length)) +
+      this.margin * widths.length;
     return width;
   }
 
   public getTitleWidth() {
     let title = this.name();
-    let text = d3.select("svg")
-      .append("text")
-      .attr("x", 0)
-      .attr("y", 0)
-      .attr("font-size", 20)
-      .style({'font-weight': 'bold'})
+    let text = d3
+      .select('#svg')
+      .append('text')
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('font-size', 20)
       .text(title);
-    let res = text["_groups"][0][0].getEndPositionOfChar(title.length - 1).x + 20;
+    let res =
+      text['_groups'][0][0].getEndPositionOfChar(title.length - 1).x + 20;
     text.remove();
     return res;
   }
 
-  public getTableWidth() {
-    let tableData = this.getSvgTable();
-    let res = [...Array(tableData[0].length).fill(0)];
-    tableData.forEach(row => {
-      row.forEach((cell, index) => {
-        let text = d3.select("svg")
-          .append("text")
-          .attr("x", 0)
-          .attr("y", 0)
-          .attr("font-size", 20)
-          .text(cell.getText());
-        res[index] = Math.max(text["_groups"][0][0].getEndPositionOfChar(cell.getText().length - 1).x + 20, res[index]);
-        text.remove();
-      })
-    });
-    return res;
-  }
-
   private makeSvgTable(): SvgTable {
+    const temp_svgTable: SvgTable = [];
     const svgTable: SvgTable = [];
     const variables = this.stack.getVariables();
     const stackName = this.stack.name;
     for (const variable of variables) {
       const value = variable.getValue();
       const isArrayVariable = Array.isArray(value);
+      if (isArrayVariable) this.hasArry = true;
       const svgVariable = isArrayVariable
         ? new SvgArrayVariable(variable, stackName, this.getTypedef)
         : new SvgVariable(variable, stackName, this.getTypedef);
       const cellss = svgVariable.getSvgTable();
-      svgTable.push(...cellss);
+      temp_svgTable.push(...cellss);
     }
+    if (temp_svgTable.length == 0) {
+      return temp_svgTable;
+    }
+    let len = this.hasArry ? 5 : 4;
+    let res = [...Array(len).fill(0)];
+    console.log(temp_svgTable);
+
+    temp_svgTable.forEach((row) => {
+      row.forEach((cell, index) => {
+        if (cell.getText().length > 0) {
+          let text = d3
+            .select('body')
+            .append('svg')
+            .append('text')
+            .attr('x', 0)
+            .attr('y', 0)
+            .attr('font-size', 20)
+            .text(cell.getText());
+          res[index] = Math.max(
+            text['_groups'][0][0].getEndPositionOfChar(
+              cell.getText().length - 1
+            ).x + 20,
+            res[index]
+          );
+          text.remove();
+        }
+      });
+    });
+    this.widths = res;
+    let widthSum = sum(res, res.length);
+    this.margin =
+      widthSum < this.getTitleWidth()
+        ? (this.getTitleWidth() - widthSum) / res.length + 5
+        : 5;
+    temp_svgTable.forEach((row) => {
+      row.forEach((cell, index) => {
+        cell.setWidth(res[index] + this.margin);
+        cell.setMargin(this.margin, 5 + SvgCell.FONT_SIZE);
+      });
+    });
+    temp_svgTable.forEach((row) => {
+      svgTable.push(row);
+    });
     return svgTable;
   }
   private pushbackEmptyCell(svgTable: SvgTable) {
-    this.numOfCol = Math.max(
-      ...svgTable.map((row: SvgRow) => row.length)
-    );
+    this.numOfCol = Math.max(...svgTable.map((row: SvgRow) => row.length));
     for (const row of svgTable) {
       const emptyCells = new Array(this.numOfCol - row.length);
       for (let i = 0; i < emptyCells.length; ++i) {
@@ -433,7 +467,7 @@ export class SvgVariable {
     this.pushCell(type);
     this.pushCell(name);
     const valueCell = this.pushCell(valueStr);
-    const addrCell = this.pushCell(addressStr);
+    const addrCell = this.pushCell(addressStr.replace(/(\s*$)/g, ''));
     if (this.isTypePtr()) {
       // valueはアドレス値
       pointerConnectionManager.addPtrVariable(value, valueCell.key);
@@ -506,22 +540,29 @@ export class SvgArrayVariable extends SvgVariable {
 export class SvgCell {
   public width: number;
 
-  public static readonly FONT_SIZE: number = 17;
-  public static readonly HEIGHT: number = 25;
+  public static readonly FONT_SIZE: number = 20;
+  public static readonly HEIGHT: number = 33;
   public readonly key: string;
   public isVisible: boolean = true;
 
+  private margin: Vector = new Vector(10, 25);
   private pos: Vector = new Vector(-1, -1);
   private colors: string[] = [];
   private children: SvgTable | null = null;
   constructor(private text: string, parentKey: string) {
-    const margin = text.length % 2 === 0 ? 1.5 : 1;
-    this.width = (text.length + 2 * margin) * (SvgCell.FONT_SIZE / 2);
     this.key = `${parentKey}-${text}`;
+  }
+
+  public setWidth(width: number) {
+    this.width = width;
   }
 
   public setPos(x: number, y: number) {
     this.pos.setAxes(x, y);
+  }
+
+  public setMargin(x: number, y: number) {
+    this.margin.setAxes(x, y);
   }
 
   public getPos() {
@@ -533,6 +574,14 @@ export class SvgCell {
   }
   public y() {
     return this.pos.getY();
+  }
+
+  public marginX() {
+    return this.margin.getX();
+  }
+
+  public marginY() {
+    return this.margin.getY();
   }
 
   public clearColor() {

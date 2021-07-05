@@ -5,10 +5,12 @@ import { ExecState } from 'unicoen.ts/dist/interpreter/Engine/ExecState';
 import SvgContent from './SvgContent';
 import '../../css/canvas.css';
 import { SvgDrawer } from './SvgDrawer';
+import * as d3 from 'd3';
+import { Selection } from 'd3/src/index';
+
 interface Props {
   width: number;
   height: number;
-  scale: number;
 }
 interface State {
   execState?: ExecState;
@@ -21,18 +23,18 @@ export default class Svg extends React.Component<Props, State> {
     slot('draw', (execState: ExecState) => this.setState({ execState }));
   }
 
+  componentDidMount() {}
+
   render() {
     return (
       <div id="display">
-        <Stage
+        <svg
           width={0.95 * this.props.width}
           height={0.95 * this.props.height}
-          scale={{ x: this.props.scale, y: this.props.scale }}
+          id="svg"
         >
-          <SvgContent
-            svgDrawer={new SvgDrawer(this.state.execState)}
-          />
-        </Stage>
+          <SvgContent svgDrawer={new SvgDrawer(this.state.execState)} />
+        </svg>
       </div>
     );
   }

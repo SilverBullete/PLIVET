@@ -1,6 +1,7 @@
 {
     "extends": "./tsconfig.prod.json",
     "compilerOptions": {
-      "sourceMap": true
+      "sourceMap": true,
+      "noUnusedLocals": true,
     }
 }

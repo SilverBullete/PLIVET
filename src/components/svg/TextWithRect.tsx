@@ -1,14 +1,14 @@
 import React from 'react';
-import { Rect, Text } from 'react-konva';
 import { SvgCell } from './SvgDrawer';
 import hexToRgba from '../Color';
-import * as d3 from 'd3';
 
 interface Props {
   x: number;
   y: number;
   text: string;
   width: number;
+  marginX: number;
+  marginY: number;
   align?: string;
   fontStyle?: string;
   onClick?: () => void;
@@ -26,7 +26,18 @@ export default class TextWithRect extends React.Component<Props, State> {
     if (!this.props.isVisible) {
       return null;
     }
-    const { x, y, text, width, align, fontStyle, onClick, colors } = this.props;
+    const {
+      x,
+      y,
+      text,
+      width,
+      align,
+      fontStyle,
+      onClick,
+      colors,
+      marginX,
+      marginY,
+    } = this.props;
     const height = SvgCell.HEIGHT;
     const isAlignCenter = align && align === 'center';
     const colorAndPos: (string | number)[] = [];
@@ -43,39 +54,27 @@ export default class TextWithRect extends React.Component<Props, State> {
       colorAndPos.push(0, 'rgba(0,0,0,0)', 1, 'rgba(0,0,0,0)');
     }
 
-    const svg = d3
-      .select("body")
-      .select("svg")
-    
-    
-
     return (
       <React.Fragment>
-        <Rect
+        <rect
           x={x}
           y={y}
           width={width}
           height={height}
-          stroke={`black`}
-          // fill="rgba(0,0,0,127)"
-          fillLinearGradientStartPoint={{ x: 0, y: 0 }}
-          fillLinearGradientEndPoint={{ x: width, y: 0 }}
-          fillLinearGradientColorStops={colorAndPos}
+          fill="white"
+          style={{ stroke: 'black', strokeWidth: '1.5px' }}
         />
-        <Text
-          x={x}
-          y={y}
-          fontFamily="Consolas, 'Courier New', monospace"
+        <text
+          x={x + marginX}
+          y={y + marginY}
           fontStyle={fontStyle ? fontStyle : 'normal'}
-          align={align ? align : 'left'}
-          verticalAlign="middle"
-          offsetX={isAlignCenter ? 0 : -SvgCell.FONT_SIZE / 2}
           width={width}
           height={height}
-          text={text}
           fontSize={SvgCell.FONT_SIZE}
           onClick={onClick ? onClick : undefined}
-        />
+        >
+          {text}
+        </text>
       </React.Fragment>
     );
   }

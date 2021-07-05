@@ -14,15 +14,14 @@ interface Props {
 
 interface State {}
 
-function dragged(d){
-  d3.select(this)
-    .attr("transform", function(){
-      let source = this.attributes.transform.value.replace(")", "");
-      source = source.split(",");
-      let tx = d.dx + Number(source[4]);
-      let ty = d.dy + Number(source[5]);
-      return "matrix(1,0,0,1,"+tx+","+ty+")" 
-    })
+function dragged(d: any) {
+  d3.select(this).attr('transform', function () {
+    let source = this.attributes.transform.value.replace(')', '');
+    source = source.split(',');
+    let tx = d.dx + Number(source[4]);
+    let ty = d.dy + Number(source[5]);
+    return 'matrix(1,0,0,1,' + tx + ',' + ty + ')';
+  });
 }
 
 export default class StackRect extends React.Component<Props, State> {
@@ -30,49 +29,30 @@ export default class StackRect extends React.Component<Props, State> {
     super(props);
   }
 
-  renderHeader() {
-    const { svgStack } = this.props;
-    const x = svgStack.x();
-    const y = svgStack.y();
-    return (
-      <TextWithRect
-        x={x}
-        y={y}
-        text={svgStack.name()}
-        width={svgStack.width()}
-        fontStyle="bold"
-        align="center"
-        isVisible={true}
-      />
-    );
-  }
-  renderBody() {
-    const svgStack = this.props.svgStack;
-    const list: JSX.Element[] = [];
-    const svgTable = svgStack.getSvgTable();
-    for (const svgRow of svgTable) {
-      if (!svgRow[0].isVisible) {
-        continue;
-      }
-      const key = svgRow.reduce((sum, cell) => sum.concat(cell.key), '');
-      list.push(<VariableRect key={key} svgRow={svgRow} />);
-    }
-    return list;
+  componentDidMount() {
+    d3.select('#svg')
+      .selectAll('.svg-table')
+      .call(d3.drag().on('drag', dragged));
   }
 
   createTable() {
     const { svgStack } = this.props;
     const x = svgStack.x();
     const y = svgStack.y();
-    let table = d3.select("svg")
-      .append("g")
-      .attr("class", "svg-table")
-      .attr("id", svgStack.name())
-      .attr("x", x)
-      .attr("y", y)
-      .attr("transform", "matrix(1,0,0,1,0,0)")
-      .call(d3.drag()
-        .on("drag", dragged));
+    const title = this.drawTitle();
+    const tableContent = this.drawTable();
+    let table = (
+      <g
+        className="svg-table"
+        id={svgStack.name()}
+        x={x}
+        y={y}
+        transform="matrix(1,0,0,1,0,0)"
+      >
+        {title}
+        {tableContent}
+      </g>
+    );
     return table;
   }
 
@@ -81,41 +61,44 @@ export default class StackRect extends React.Component<Props, State> {
     const x = svgStack.x();
     const y = svgStack.y();
     const width = svgStack.width();
-    const titleBorder = d3.select("#" + svgStack.name())
-      .append("rect")
-      .attr("x", x)
-      .attr("y", y)
-      .attr("width", width)
-      .attr("height", 33)
-      .attr("fill", "white")
-      .style('stroke', 'black')
-      .style("stroke-width", "1.5px");
-    const titleText = d3.select("#" + svgStack.name())
-      .append("text")
-      .attr("x", x + (width - svgStack.getTitleWidth()) / 2)
-      .attr("y", y + 25)
-      .attr("font-size", 20)
-      .style({'font-weight': 'bold'})
-      .text(svgStack.name());
+    const title = (
+      <g className="title">
+        <TextWithRect
+          key={svgStack.name()}
+          x={x}
+          y={y}
+          marginX={(width - svgStack.getTitleWidth()) / 2}
+          marginY={25}
+          text={svgStack.name()}
+          width={width}
+          isVisible={true}
+        />
+      </g>
+    );
+    return title;
   }
 
   drawTable() {
-    
+    const { svgStack } = this.props;
+    const list: JSX.Element[] = [];
+    const svgTable = svgStack.getSvgTable();
+    console.log(svgTable);
+    for (const svgRow of svgTable) {
+      if (!svgRow[0].isVisible) {
+        continue;
+      }
+      const key = svgRow.reduce((sum, cell) => sum.concat(cell.key), '');
+      list.push(
+        <g className="row">
+          <VariableRect key={key} svgRow={svgRow} />
+        </g>
+      );
+    }
+    return list;
   }
 
   render() {
-    const svgStack = this.props.svgStack;
-    const title = svgStack.name();
     const table = this.createTable();
-    
-
-    const header = this.renderHeader();
-    const body = this.renderBody();
-    return (
-      <Group>
-        {header}
-        {body}
-      </Group>
-    );
+    return table;
   }
 }

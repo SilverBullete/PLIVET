@@ -30,6 +30,8 @@ export default class SvgContent extends React.Component<Props, State> {
   }
 
   makeArrows(svgArrows: SvgArrow[]) {
+    console.log(svgArrows);
+
     const list = svgArrows.map((svgArrow) => {
       const { from, mid, to, key, color } = svgArrow;
       const rgbaColor = hexToRgba(color);
@@ -63,8 +65,8 @@ export default class SvgContent extends React.Component<Props, State> {
     const arrow = this.makeArrows(svgArrows);
     return (
       <React.Fragment>
-        <Layer>{stack}</Layer>
-        <Layer>{arrow}</Layer>
+        <g>{stack}</g>
+        <g>{arrow}</g>
       </React.Fragment>
     );
   }
