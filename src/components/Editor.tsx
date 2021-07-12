@@ -106,7 +106,7 @@ export default class Editor extends React.Component<Props, State> {
     // Enable breakpoint
     const editor: AceAjax.Editor = this.editorRef.current.editor;
     editor.on('keydown', (e: any) => {
-      console.log(e);
+      // console.log(e);
     });
     editor.on('guttermousedown', (e: GutterMousedownEvent) => {
       const target: GutterMousedownEventTarget = e.domEvent.currentTarget;
@@ -174,7 +174,7 @@ export default class Editor extends React.Component<Props, State> {
           this.setSyntaxError(errors);
         })
         .catch((e) => {
-          console.log(e);
+          // console.log(e);
           alert(e);
         });
     } else if (
@@ -196,7 +196,7 @@ export default class Editor extends React.Component<Props, State> {
           this.recieve(response);
         })
         .catch((e) => {
-          console.log(e);
+          // console.log(e);
           alert(e);
         });
     }
@@ -223,7 +223,7 @@ export default class Editor extends React.Component<Props, State> {
       signal('files', files);
       this.setHighlightOnCode(debugState, execState);
     } catch (e) {
-      console.log(e);
+      // console.log(e);
       alert(e);
     }
   }

@@ -45,8 +45,6 @@ export default class StackRect extends React.Component<Props, State> {
     return list;
   }
   render() {
-    console.log(this.props);
-
     const header = this.renderHeader();
     const body = this.renderBody();
     return (

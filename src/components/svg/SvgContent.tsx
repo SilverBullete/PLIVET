@@ -1,9 +1,9 @@
 import * as React from 'react';
-import { Layer, Arrow } from 'react-konva';
 import StackRect from './StackRect';
 import { SvgDrawer, SvgStack, SvgArrow } from './SvgDrawer';
 import { slot } from '../emitter';
-import hexToRgba from '../Color';
+import Arrow from './Arrow';
+import * as d3 from 'd3';
 interface Props {
   svgDrawer: SvgDrawer;
 }
@@ -21,6 +21,7 @@ export default class SvgContent extends React.Component<Props, State> {
       this.updatePos();
     });
   }
+  componentDidMount() {}
 
   makeStacks(svgStacks: SvgStack[]) {
     const list = svgStacks.map((svgStack) => (
@@ -30,32 +31,51 @@ export default class SvgContent extends React.Component<Props, State> {
   }
 
   makeArrows(svgArrows: SvgArrow[]) {
-    console.log(svgArrows);
-
-    const list = svgArrows.map((svgArrow) => {
-      const { from, mid, to, key, color } = svgArrow;
-      const rgbaColor = hexToRgba(color);
-      return (
-        <Arrow
-          key={key}
-          points={[from.x, from.y, mid.x, mid.y, to.x, to.y]}
-          tension={0.25} // 0だと折れ線
-          stroke={rgbaColor}
-          // stroke={colors[index % colors.length]} // |(storoke)部分
-          // strokeWidth={4}
-          fill={rgbaColor} // △(pointer)部分
-          pointerLength={10}
-          pointerWidth={10}
-          opacity={1.0}
-        />
-      );
-    });
+    const list = svgArrows.map((svgArrow) => (
+      <Arrow svgArrow={svgArrow} />
+      // <Arrow
+      //   key={key}
+      //   points={[from.x, from.y, mid.x, mid.y, to.x, to.y]}
+      //   tension={0.25} // 0だと折れ線
+      //   stroke={rgbaColor}
+      //   // stroke={colors[index % colors.length]} // |(storoke)部分
+      //   // strokeWidth={4}
+      //   fill={rgbaColor} // △(pointer)部分
+      //   pointerLength={10}
+      //   pointerWidth={10}
+      //   opacity={1.0}
+      // />
+    ));
     return list;
   }
 
   updatePos() {
     this.props.svgDrawer.updatePos();
-    this.forceUpdate();
+    const svgStacks = this.props.svgDrawer.getSvgStacks();
+    const svgArrows = this.props.svgDrawer.getSvgArrows();
+    this.setState({ svgStacks, svgArrows });
+    d3.selectAll('.path').attr('d', (data) => {
+      const fromPos = data.getFromPos();
+      const toPos = data.getToPos();
+      const dx = toPos.x - fromPos.x;
+      const dy = toPos.y - fromPos.y;
+      const dr = Math.sqrt(dx * dx + dy * dy);
+      const d =
+        'M' +
+        fromPos.x +
+        ',' +
+        fromPos.y +
+        'A' +
+        dr +
+        ',' +
+        dr +
+        ' 0 0,1 ' +
+        toPos.x +
+        ',' +
+        toPos.y;
+      return d;
+    });
+    // this.forceUpdate();
   }
 
   render() {

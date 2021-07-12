@@ -1,8 +1,10 @@
 import React from 'react';
 import { SvgCell } from './SvgDrawer';
 import hexToRgba from '../Color';
+import * as d3 from 'd3';
 
 interface Props {
+  id: string;
   x: number;
   y: number;
   text: string;
@@ -22,11 +24,39 @@ export default class TextWithRect extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
   }
+  componentDidMount() {
+    d3.selectAll('.path').attr('d', (data) => {
+      try {
+        const fromPos = data.getFromPos();
+        const toPos = data.getToPos();
+        const dx = toPos.x - fromPos.x;
+        const dy = toPos.y - fromPos.y;
+        const dr = Math.sqrt(dx * dx + dy * dy);
+        const d =
+          'M' +
+          fromPos.x +
+          ',' +
+          fromPos.y +
+          'A' +
+          dr +
+          ',' +
+          dr +
+          ' 0 0,1 ' +
+          toPos.x +
+          ',' +
+          toPos.y;
+        return d;
+      } catch (e) {
+        return '';
+      }
+    });
+  }
   render() {
     if (!this.props.isVisible) {
       return null;
     }
     const {
+      id,
       x,
       y,
       text,
@@ -38,6 +68,7 @@ export default class TextWithRect extends React.Component<Props, State> {
       marginX,
       marginY,
     } = this.props;
+
     const height = SvgCell.HEIGHT;
     const isAlignCenter = align && align === 'center';
     const colorAndPos: (string | number)[] = [];
@@ -57,6 +88,7 @@ export default class TextWithRect extends React.Component<Props, State> {
     return (
       <React.Fragment>
         <rect
+          id={id}
           x={x}
           y={y}
           width={width}

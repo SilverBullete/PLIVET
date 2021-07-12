@@ -1,6 +1,5 @@
 import * as React from 'react';
 import VariableRect from './VariableRect';
-import { Group } from 'react-konva';
 import { SvgStack, SvgCell } from './SvgDrawer';
 import TextWithRect from './TextWithRect';
 import * as d3 from 'd3';
@@ -15,6 +14,27 @@ interface Props {
 interface State {}
 
 function dragged(d: any) {
+  d3.selectAll('.path').attr('d', (data) => {
+    const fromPos = data.getFromPos();
+    const toPos = data.getToPos();
+    const dx = toPos.x - fromPos.x;
+    const dy = toPos.y - fromPos.y;
+    const dr = Math.sqrt(dx * dx + dy * dy);
+    const d =
+      'M' +
+      fromPos.x +
+      ',' +
+      fromPos.y +
+      'A' +
+      dr +
+      ',' +
+      dr +
+      ' 0 0,1 ' +
+      toPos.x +
+      ',' +
+      toPos.y;
+    return d;
+  });
   d3.select(this).attr('transform', function () {
     let source = this.attributes.transform.value.replace(')', '');
     source = source.split(',');
@@ -64,7 +84,7 @@ export default class StackRect extends React.Component<Props, State> {
     const title = (
       <g className="title">
         <TextWithRect
-          key={svgStack.name()}
+          id={svgStack.name()}
           x={x}
           y={y}
           marginX={(width - svgStack.getTitleWidth()) / 2}
@@ -82,15 +102,13 @@ export default class StackRect extends React.Component<Props, State> {
     const { svgStack } = this.props;
     const list: JSX.Element[] = [];
     const svgTable = svgStack.getSvgTable();
-    console.log(svgTable);
     for (const svgRow of svgTable) {
       if (!svgRow[0].isVisible) {
         continue;
       }
-      const key = svgRow.reduce((sum, cell) => sum.concat(cell.key), '');
       list.push(
         <g className="row">
-          <VariableRect key={key} svgRow={svgRow} />
+          <VariableRect svgRow={svgRow} />
         </g>
       );
     }

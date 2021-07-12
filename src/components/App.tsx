@@ -3,7 +3,6 @@ import Grid from 'react-bootstrap/lib/Grid';
 import Row from 'react-bootstrap/lib/Row';
 import Col from 'react-bootstrap/lib/Col';
 import EditorSide from './EditorSide';
-import CanvasSide from './CanvasSide';
 import SvgSide from './SvgSide';
 import { LangProps, ProgLangProps, ThemeProps } from './Props';
 import '../css/theme.css';

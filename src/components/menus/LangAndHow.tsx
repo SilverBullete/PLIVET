@@ -33,8 +33,8 @@ export default class LangAndHow extends React.Component<Props, State> {
           <Switch
             signal="changeLang"
             options={[
-              { value: 'ja', label: '日本語' },
               { value: 'en', label: 'English' },
+              { value: 'ja', label: '日本語' },
             ]}
           />
         </Col>

@@ -14,7 +14,7 @@ interface State {
 export default class AppWithLang extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = { lang: 'ja', progLang: 'c_cpp', theme: 'light' };
+    this.state = { lang: 'en', progLang: 'c_cpp', theme: 'light' };
     slot('changeLang', (lang: Lang) => {
       this.setState({ lang });
     });

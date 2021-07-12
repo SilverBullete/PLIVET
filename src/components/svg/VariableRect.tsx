@@ -25,7 +25,7 @@ export default class VariableRect extends React.Component<Props, State> {
       const canToggleFold = cell.canToggleFold();
       return (
         <TextWithRect
-          key={key}
+          id={key}
           x={x}
           y={y}
           marginX={marginX}
