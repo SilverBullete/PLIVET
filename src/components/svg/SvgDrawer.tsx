@@ -653,7 +653,6 @@ export class MemoryDrawer {
     this.execState = execState;
     this.update();
     this.calc();
-    console.log(execState);
   }
 
   private update() {
@@ -673,9 +672,11 @@ export class MemoryDrawer {
     const maxAddresses = [];
     const widths = [];
     this.svgMemoryTable.forEach((cell) => {
-      minAddresses.push(cell.getAddress());
-      maxAddresses.push(cell.getAddress() + cell.getHeight() - 1);
-      widths.push(cell.getWidth());
+      if (cell.getAddress() > 50000) {
+        minAddresses.push(cell.getAddress());
+        maxAddresses.push(cell.getAddress() + cell.getHeight() - 1);
+        widths.push(cell.getWidth());
+      }
     });
     let min = 99999999;
     let max = 0;

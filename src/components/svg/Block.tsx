@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { BlockStack, BlockCell } from './BlockDrawer';
+import * as d3 from 'd3';
 
 interface Props {
   blockStack: BlockStack;
@@ -7,9 +8,40 @@ interface Props {
 
 interface State {}
 
+function wrapWord(text, width) {
+  text.each(function () {
+    let text = d3.select(this),
+      words = text.text().split('').reverse(),
+      word,
+      line = [],
+      x = text.attr('x'),
+      y = text.attr('y'),
+      tspan = text
+        .text(null)
+        .append('tspan')
+        .attr('class', 'value')
+        .attr('x', x)
+        .attr('y', y);
+    while ((word = words.pop())) {
+      line.push(word);
+      tspan.text(line.join(''));
+      if (tspan.node().getComputedTextLength() > width) {
+        line.pop();
+        line.splice(line.length - 2, 3, '.', '.', '.');
+        tspan.text(line.join(''));
+        break;
+      }
+    }
+  });
+}
+
 export default class Block extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
+  }
+
+  componentDidUpdate() {
+    wrapWord(d3.selectAll('.value'), BlockCell.WIDTH - 10);
   }
 
   renderBlockBackground() {
@@ -63,11 +95,12 @@ export default class Block extends React.Component<Props, State> {
               style={{ stroke: 'black', strokeWidth: '1.5px' }}
             />
             <text
+              className="value"
               x={blockCell.x() + 10}
               y={blockCell.y() + BlockCell.FONT_SIZE + 10}
               fontSize={BlockCell.FONT_SIZE}
             >
-              {blockCell.getValue().toString()}
+              {blockCell.getValue()}
             </text>
           </g>
         );
@@ -80,7 +113,7 @@ export default class Block extends React.Component<Props, State> {
     const backgroud = this.renderBlockBackground();
     const content = this.renderBlockContent();
     return (
-      <g id={this.props.blockStack.key}>
+      <g id={this.props.blockStack.getName()}>
         {backgroud}
         {content}
       </g>

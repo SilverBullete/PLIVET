@@ -39,7 +39,7 @@ export default class App extends React.Component<Props, State> {
             <SvgSide lang={lang} />
           </Col>
         </Row>
-        <Footer fromYear={2018} />
+        {/* <Footer fromYear={2018} /> */}
       </Grid>
     );
   }

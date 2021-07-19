@@ -56,24 +56,6 @@ int main(){
 
   printf("Hello,world!\n");//標準出力
 
-  //ファイル出力
-  {
-    FILE* fp=NULL;
-    fp = fopen("PLIVET.txt", "w");
-    fputs("PLIVET", fp);
-    fclose(fp);
-  }
-
-  //ファイル入力
-  {
-    FILE* fp=NULL;
-    char buf[7];
-    fp = fopen("PLIVET.txt", "r");
-    while(fgets(buf,10,fp) != NULL) {
-      printf("%s",buf);
-    }
-    fclose(fp);
-  }
 
   return 0;
 }`,

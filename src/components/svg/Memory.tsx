@@ -51,27 +51,36 @@ export default class Memory extends React.Component<Props, State> {
     const width = memoryDrawer.getWidth();
     const list: JSX.Element[] = [];
     svgMemoryTable.forEach((cell) => {
-      list.push(
-        <React.Fragment>
-          <rect
-            x="100.5"
-            y={50.5 + 20 * (cell.getAddress() - minAddress)}
-            width={width - 0.9}
-            height={cell.getHeight() * 20 - 1.5}
-            fill="white"
-          ></rect>
-          <text
-            x="110"
-            y={65 + 20 * (cell.getAddress() - minAddress)}
-            fontSize="15"
-          >
-            {cell.getStackName() + '_' + cell.getName()}
-          </text>
-        </React.Fragment>
-      );
+      if (cell.getAddress() > 50000) {
+        list.push(
+          <React.Fragment>
+            <rect
+              x="100.5"
+              y={50.5 + 20 * (cell.getAddress() - minAddress)}
+              width={width - 0.9}
+              height={cell.getHeight() * 20 - 1.5}
+              fill="white"
+            ></rect>
+            <text
+              x="110"
+              y={65 + 20 * (cell.getAddress() - minAddress)}
+              fontSize="15"
+            >
+              {cell.getStackName() + '_' + cell.getName()}
+            </text>
+          </React.Fragment>
+        );
+      }
     });
     d3.select('#memory').attr('height', (d) => {
-      return 100 + 20 * (maxAddress - minAddress);
+      if (
+        100 + 20 * (maxAddress - minAddress) &&
+        100 + 20 * (maxAddress - minAddress) > 0
+      ) {
+        return 100 + 20 * (maxAddress - minAddress);
+      } else {
+        return 0;
+      }
     });
     return list;
   }

@@ -37,7 +37,8 @@ export class Response {
     public step: number,
     public errors: SyntaxErrorData[],
     public files: Map<string, ArrayBuffer>,
-    public execState?: ExecState
+    public execState?: ExecState,
+    public lastState?: ExecState
   ) {}
 }
 
@@ -223,9 +224,14 @@ class Server {
     ++this.count;
     if (this.count < this.stateHistory.length) {
       const execState = this.stateHistory[this.count];
+      let lastState = undefined;
+      if (this.count > 0) {
+        lastState = this.stateHistory[this.count - 1];
+      }
       const output = this.outputsHistory[this.count];
       const ret: Response = {
         execState,
+        lastState: lastState,
         output,
         sourcecode,
         debugState: 'Debugging',
@@ -265,6 +271,7 @@ class Server {
       }
       const ret: Response = {
         execState,
+        lastState: this.stateHistory[this.stateHistory.length - 2],
         output,
         sourcecode,
         debugState,

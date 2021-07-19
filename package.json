@@ -11,7 +11,7 @@
   "scripts": {
     "ts-lint": "tslint --fix 'src/**/*.tsx'",
     "start": "opener http://localhost:8080 && cross-env NODE_ENV=dev webpack-dev-server --config webpack.config.dev.js",
-    "build": "yarn clean && cross-env NODE_ENV=prod webpack --config webpack.config.js && yarn license",
+    "build": "yarn clean && cross-env NODE_ENV=dev webpack --config webpack.config.js && yarn license",
     "license": "license-list-html -o ./dist/licenses.html -a RYOSKATE",
     "test": "jest",
     "deduplicate": "yarn-deduplicate yarn.lock && git add yarn.lock",
@@ -33,6 +33,7 @@
   },
   "dependencies": {
     "d3": "^7.0.0",
+    "d3-clone": "^1.0.9",
     "yarn": "^1.22.10"
   },
   "devDependencies": {

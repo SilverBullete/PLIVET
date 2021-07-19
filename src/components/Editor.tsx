@@ -211,6 +211,7 @@ export default class Editor extends React.Component<Props, State> {
         step,
         sourcecode,
         files,
+        lastState,
       } = response;
       this.isDebugging = debugState !== 'Stop';
       this.sentSourcecode = sourcecode;
@@ -219,7 +220,7 @@ export default class Editor extends React.Component<Props, State> {
       }
       signal('changeState', debugState, step);
       signal('changeOutput', output);
-      signal('draw', execState);
+      signal('draw', execState, lastState);
       signal('files', files);
       this.setHighlightOnCode(debugState, execState);
     } catch (e) {

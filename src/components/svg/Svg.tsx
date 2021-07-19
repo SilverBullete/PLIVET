@@ -18,35 +18,18 @@ interface Props {
 }
 interface State {
   execState?: ExecState;
+  lastState?: ExecState;
 }
 
 export default class Svg extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = { execState: undefined };
-    console.log(this.state.execState);
-
-    slot('draw', (execState: ExecState) => this.setState({ execState }));
+    slot('draw', (execState: ExecState, lastState: ExecState) =>
+      this.setState({ execState, lastState })
+    );
   }
-
   render() {
-    // const marker = Arrow.drawArrowMarker();
-
-    //  <defs>
-    //           <marker
-    //             id="arrow"
-    //             markerUnits="strokeWidth"
-    //             markerWidth="12"
-    //             markerHeight="12"
-    //             viewBox="0 0 12 12"
-    //             refX="6"
-    //             refY="6"
-    //             orient="auto"
-    //           >
-    //             <path d="M2,2 L10,6 L2,10 L6,6 L2,2" fill="#000"></path>
-    //           </marker>
-    //         </defs>
-    //         <SvgContent svgDrawer={new SvgDrawer(this.state.execState)} />
     return (
       <div id="display">
         <div className="left">
@@ -69,7 +52,9 @@ export default class Svg extends React.Component<Props, State> {
             <Memory memoryDrawer={new MemoryDrawer(this.state.execState)} />
           </svg>
           <AnimationContent
-            animationDrawer={new AnimationDrawer(this.state.execState)}
+            animationDrawer={
+              new AnimationDrawer(this.state.execState, this.state.lastState)
+            }
           />
         </div>
       </div>

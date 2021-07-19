@@ -2,6 +2,7 @@ import { ExecState } from 'unicoen.ts/dist/interpreter/Engine/ExecState';
 import { Stack } from 'unicoen.ts/dist/interpreter/Engine/Stack';
 import { Variable } from 'unicoen.ts/dist/interpreter/Engine/Variable';
 import { Vector } from 'vector2d';
+import { inArray } from 'jquery';
 
 export type BlockCellContainer = BlockCell[];
 export type BlockTable = BlockCellContainer[];
@@ -27,6 +28,44 @@ function getCellsByDepth(
   return res;
 }
 
+export function arrayToString(value, type) {
+  let array = valueToArray(value, type);
+  if (Array.isArray(value)) {
+    if (
+      (type.startsWith('char') || type.startsWith('unsignedchar')) &&
+      type.split('[').length === 2
+    ) {
+      return '"' + array.toString() + '"';
+    }
+    return '[' + array.toString() + ']';
+  }
+  return array.toString();
+}
+
+export function valueToArray(value, type) {
+  let res = [];
+  if (Array.isArray(value)) {
+    value.forEach((v) => {
+      res.push(arrayToString(v.value, v.type));
+    });
+  } else {
+    if (type === 'char' || type === 'unsignedchar') {
+      return typeof value === undefined || value == 0
+        ? ''
+        : String.fromCharCode(value);
+    } else {
+      return value ? value : 0;
+    }
+  }
+  if (
+    (type.startsWith('char') || type.startsWith('unsignedchar')) &&
+    type.split('[').length === 2
+  ) {
+    return [res.join('')];
+  }
+  return res;
+}
+
 export class BlockDrawer {
   private blockStacks: BlockStack[] = [];
   private blockArrows: BlockArrow[] = [];
@@ -34,8 +73,12 @@ export class BlockDrawer {
   constructor(execState?: ExecState) {
     if (typeof execState === 'undefined') return;
     this.execState = execState;
+    this.reset();
     this.update();
     this.calcPos();
+  }
+  private reset() {
+    this.blockStacks = [];
   }
 
   private update() {
@@ -123,6 +166,10 @@ export class BlockDrawer {
   public getBlockStacks() {
     return this.blockStacks;
   }
+
+  public addBlockStack(blockStack) {
+    this.blockStacks.push(blockStack);
+  }
 }
 
 export class BlockStack {
@@ -186,6 +233,11 @@ export class BlockStack {
   public getHeight() {
     return this.height;
   }
+
+  public getName() {
+    let res = this.key.replace(/[&\|\\\*:^%$@()\[\].]/g, '_');
+    return res;
+  }
 }
 
 export class BlockArrow {
@@ -201,7 +253,7 @@ export class BlockVariable {
     this.variable = variable;
     this.stackName = stackName;
     this.key = `${stackName}-${variable.name}`;
-    this.key = this.key.replace(/[&\|\\\*:^%$@()\[\]]/g, '_');
+    this.key = this.key.replace(/[&\|\\\*:^%$@()\[\].]/g, '_');
     this.init();
   }
 
@@ -258,7 +310,7 @@ export class BlockCell {
   constructor(name: string, parentKey: string, value: any) {
     this.name = name;
     this.key = parentKey;
-    this.key = this.key.replace(/[&\|\\\*:^%$@()\[\]]/g, '_');
+    this.key = this.key.replace(/[&\|\\\*:^%$@()\[\].]/g, '_');
     this.value = value;
     this.depth = this.name.split('[').length - 1;
   }
@@ -304,8 +356,11 @@ export class BlockCell {
   }
 
   public getValue() {
-    if (this.type.split('[').length > 1) return '';
-    return this.value;
+    if (this.type.split('[').length > 1) {
+      return arrayToString(this.value, this.type.split('[')[0]);
+    }
+
+    return this.value.toString();
   }
 
   public getDepth() {

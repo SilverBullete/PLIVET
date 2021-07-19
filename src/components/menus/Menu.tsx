@@ -31,9 +31,9 @@ export default class Menu extends React.Component<Props, State> {
   render() {
     return (
       <Row>
-        <Col lg={12} md={12} sm={12} xs={12} style={{ zIndex: 1000 }}>
+        {/* <Col lg={12} md={12} sm={12} xs={12} style={{ zIndex: 1000 }}>
           <LangAndHow lang={this.props.lang} />
-        </Col>
+        </Col> */}
         <Col lg={12} md={12} sm={12} xs={12}>
           <CtrlButtons
             lang={this.props.lang}
