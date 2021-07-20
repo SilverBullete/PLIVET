@@ -14,14 +14,6 @@ interface Props {
 
 interface State {}
 
-function getRectPerimeterById(id: string) {
-  const ele = d3.select('#' + id).select('rect')['_groups'][0][0];
-  if (ele === null) return 0;
-  const width = Number(ele.attributes.width.value);
-  const height = Number(ele.attributes.height.value);
-  return (width + height) * 2 + 10;
-}
-
 export default class AnimationContent extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
@@ -37,7 +29,10 @@ export default class AnimationContent extends React.Component<Props, State> {
         .transition()
         .duration(2000)
         .style('fill-opacity', 1e-6)
-        .style('stroke-opacity', 1e-6)
+        .style('stroke-opacity', 1e-6);
+      d3.select('#' + item)
+        .transition()
+        .delay(2000)
         .style('display', 'none');
     });
   }
@@ -107,6 +102,10 @@ export default class AnimationContent extends React.Component<Props, State> {
   }
 
   programInit() {
+    d3.select('#main')
+      .style('fill-opacity', 1)
+      .style('stroke-opacity', 1)
+      .style('display', 'inline');
     d3.select('#main').select('rect').style('stroke-dasharray', '0,25');
     d3.select('#main')
       .select('rect')
@@ -275,6 +274,7 @@ export default class AnimationContent extends React.Component<Props, State> {
     const postArgs = animationDrawer.getPostArgs();
     if (postArgs.length < 1) return;
     const len = animationDrawer.getVariableKeys().length;
+    if (len == 0) return;
     const key = animationDrawer.getVariableKeys()[len - 1];
     const type = animationDrawer.getVariableTypes()[len - 1];
     const value = animationDrawer.getVariableValues()[len - 1];

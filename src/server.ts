@@ -207,9 +207,14 @@ class Server {
       this.count -= 1;
     }
     const execState = this.stateHistory[this.count];
+    let lastState = undefined;
+    if (this.count > 0) {
+      lastState = this.stateHistory[this.count - 1];
+    }
     const output = this.outputsHistory[this.count];
     const ret: Response = {
       execState,
+      lastState: lastState,
       output,
       sourcecode,
       debugState: 'Debugging',
