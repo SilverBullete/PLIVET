@@ -22,7 +22,7 @@ function wrapWord(text, width) {
         .attr('class', 'value')
         .attr('x', x)
         .attr('y', y);
-    while ((word = words.pop())) {
+    while (word === words.pop()) {
       line.push(word);
       tspan.text(line.join(''));
       if (tspan.node().getComputedTextLength() > width) {
@@ -54,13 +54,14 @@ export default class Block extends React.Component<Props, State> {
           width={blockStack.getWidth()}
           height={blockStack.getHeight()}
           fill="white"
-          style={{ stroke: 'black', strokeWidth: '1.5px' }}
+          style={{ stroke: blockStack.getColor(), strokeWidth: '1.5px' }}
         ></rect>
         <text
           x={blockStack.x() + 5}
           y={blockStack.y() + BlockCell.FONT_SIZE + 7}
           fontSize={BlockCell.FONT_SIZE + 2}
           fontWeight="bold"
+          fill={blockStack.getColor()}
         >
           {blockStack.key}
         </text>
@@ -83,6 +84,7 @@ export default class Block extends React.Component<Props, State> {
               y={blockCell.y() - 5}
               fontSize={BlockCell.FONT_SIZE}
               fontWeight="blod"
+              fill={blockStack.getColor()}
             >
               {blockCell.getName()}
             </text>
@@ -92,13 +94,14 @@ export default class Block extends React.Component<Props, State> {
               width={blockCell.getWidth()}
               height={blockCell.getHeight()}
               fill="white"
-              style={{ stroke: 'black', strokeWidth: '1.5px' }}
+              style={{ stroke: blockStack.getColor(), strokeWidth: '1.5px' }}
             />
             <text
               className="value"
               x={blockCell.x() + 10}
               y={blockCell.y() + BlockCell.FONT_SIZE + 10}
               fontSize={BlockCell.FONT_SIZE}
+              fill={blockStack.getColor()}
             >
               {blockCell.getValue()}
             </text>

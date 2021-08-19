@@ -14,7 +14,12 @@ export type event =
   | 'EOF'
   | 'stdin'
   | 'Breakpoint'
-  | 'files';
+  | 'files'
+  | 'changeStep'
+  | 'jumpTo'
+  | 'init'
+  | 'statementHighlight'
+  | 'cancelStatementHighlight';
 export const slot = (
   event: event,
   listener: (...args: any[]) => void

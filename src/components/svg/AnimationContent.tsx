@@ -148,7 +148,7 @@ export default class AnimationContent extends React.Component<Props, State> {
     const types = animationDrawer.getVariableTypes();
     const values = animationDrawer.getVariableValues();
 
-    d3.select('#' + stackName).attr('transform', 'matrix(1,0,0,1,0,400)');
+    d3.select('#' + stackName).attr('transform', 'matrix(1,0,0,1,0,250)');
     d3.select('#' + stackName)
       .select('rect')
       .style('stroke-dasharray', '10,15')
@@ -199,13 +199,13 @@ export default class AnimationContent extends React.Component<Props, State> {
           .transition()
           .duration(1000)
           .attr('x', target.select('rect').attr('x'))
-          .attr('y', Number(target.select('rect').attr('y')) + 400);
+          .attr('y', Number(target.select('rect').attr('y')) + 250);
         cloned
           .selectAll('.value')
           .transition()
           .duration(1000)
           .attr('x', target.selectAll('.value').attr('x'))
-          .attr('y', Number(target.selectAll('.value').attr('y')) + 400);
+          .attr('y', Number(target.selectAll('.value').attr('y')) + 250);
         cloned.transition().delay(1000).remove();
         source = cloned.select('.value').text();
       }
@@ -217,7 +217,7 @@ export default class AnimationContent extends React.Component<Props, State> {
       .delay(2000)
       .duration(2000)
       .tween('number', function () {
-        let i = d3.interpolateRound(400, 0);
+        let i = d3.interpolateRound(250, 0);
         return function (t) {
           d3.select('#' + stackName).attr(
             'transform',
@@ -231,16 +231,16 @@ export default class AnimationContent extends React.Component<Props, State> {
     if (
       !type.startsWith('char') &&
       !type.startsWith('unsignedchar') &&
-      type.split('[').length == 1
+      type.split('[').length === 1
     ) {
-      const number = value;
+      const num = value;
       d3.select('#' + key)
         .selectAll('.value')
         .transition()
         .duration(2000)
         .delay(delay)
         .tween('number', function () {
-          let i = d3.interpolateRound(Number(source), number);
+          let i = d3.interpolateRound(Number(source), num);
           return function (t) {
             this.textContent = i(t);
           };
@@ -274,11 +274,10 @@ export default class AnimationContent extends React.Component<Props, State> {
     const postArgs = animationDrawer.getPostArgs();
     if (postArgs.length < 1) return;
     const len = animationDrawer.getVariableKeys().length;
-    if (len == 0) return;
+    if (len === 0) return;
     const key = animationDrawer.getVariableKeys()[len - 1];
     const type = animationDrawer.getVariableTypes()[len - 1];
     const value = animationDrawer.getVariableValues()[len - 1];
-    console.log(key, type, value);
 
     const target = d3.select('#' + key);
     target
@@ -330,7 +329,7 @@ export default class AnimationContent extends React.Component<Props, State> {
         const stackName = stack.name.replace(/[&\|\\\*:^%$@()\[\].]/g, '_');
         destroyList.push(stackName);
       }
-    } else if (stacksLen != 0 && stacksLen < newStacksLen) {
+    } else if (stacksLen !== 0 && stacksLen < newStacksLen) {
       for (let i = stacksLen; i < newStacksLen; i++) {
         const stack = newStacks[i];
         const stackName = stack.name.replace(/[&\|\\\*:^%$@()\[\].]/g, '_');

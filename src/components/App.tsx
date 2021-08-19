@@ -6,7 +6,9 @@ import EditorSide from './EditorSide';
 import SvgSide from './SvgSide';
 import { LangProps, ProgLangProps, ThemeProps } from './Props';
 import '../css/theme.css';
-import Footer from './Footer';
+import 'antd/dist/antd.css';
+import 'mdb-react-ui-kit/dist/css/mdb.min.css';
+import 'react-perfect-scrollbar/dist/css/styles.css';
 type Props = LangProps & ProgLangProps & ThemeProps;
 
 interface State {}
@@ -21,18 +23,18 @@ export default class App extends React.Component<Props, State> {
       <Grid fluid={true}>
         <Row style={{ margin: '5px' }}>
           <Col
-            lg={4}
-            md={5}
-            sm={6}
+            lg={3}
+            md={4}
+            sm={5}
             xs={12}
             className={theme === 'light' ? 'theme-light' : 'theme-gray'}
           >
             <EditorSide lang={lang} progLang={progLang} />
           </Col>
           <Col
-            lg={8}
-            md={7}
-            sm={6}
+            lg={9}
+            md={8}
+            sm={7}
             xs={12}
             className={theme === 'light' ? 'theme-light' : 'theme-gray'}
           >

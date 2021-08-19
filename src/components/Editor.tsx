@@ -15,6 +15,11 @@ import 'ace-builds/src-min-noconflict/snippets/python';
 import 'ace-builds/src-min-noconflict/theme-textmate';
 import 'ace-builds/src-min-noconflict/theme-monokai';
 import 'ace-builds/src-min-noconflict/ext-language_tools';
+import * as d3 from 'd3';
+
+import Slider, { createSliderWithTooltip, Marks } from 'rc-slider';
+const SliderWithTooltip = createSliderWithTooltip(Slider);
+import 'rc-slider/assets/index.css';
 
 import '../css/editor.css';
 import { signal, slot } from './emitter';
@@ -29,8 +34,9 @@ import translate from '../locales/translate';
 import { ExecState } from 'unicoen.ts/dist/interpreter/Engine/ExecState';
 import { LangProps, ProgLangProps, Theme } from './Props';
 import { SyntaxErrorData } from 'unicoen.ts/dist/interpreter/mapper/SyntaxErrorData';
+import { inArray } from 'jquery';
 
-type Props = LangProps & ProgLangProps;
+type Props = LangProps & ProgLangProps & { width: number; height: number };
 interface State {
   fontSize: number;
   showAlert: boolean;
@@ -58,6 +64,7 @@ interface GutterMousedownEvent extends React.MouseEvent {
 export default class Editor extends React.Component<Props, State> {
   private sentSourcecode: string;
   private preventedCommand: CONTROL_EVENT = 'Stop';
+  private controlEvent: CONTROL_EVENT;
   private sourcecode: string;
   private ace: any = null;
   private editorRef = React.createRef<any>();
@@ -68,8 +75,11 @@ export default class Editor extends React.Component<Props, State> {
   private highlightIds: number[] = [];
   constructor(props: Props) {
     super(props);
-
-    this.state = { fontSize: 14, showAlert: false, theme: 'light' };
+    this.state = {
+      fontSize: 14,
+      showAlert: false,
+      theme: 'light',
+    };
     const { lang, progLang } = props;
     this.sourcecode = translate(lang, this.sourceCodeKey(progLang));
     this.sentSourcecode = '';
@@ -78,6 +88,23 @@ export default class Editor extends React.Component<Props, State> {
 
     slot('debug', (controlEvent: CONTROL_EVENT, stdinText?: string) => {
       this.send(controlEvent, stdinText);
+    });
+    slot('jumpTo', (step: number) => {
+      const request: Request = {
+        sourcecode: this.sourcecode,
+        controlEvent: 'JumpTo',
+        progLang,
+        step: step,
+      };
+      server
+        .send(request)
+        .then((response: Response) => {
+          this.recieve(response);
+        })
+        .catch((e) => {
+          // console.log(e);
+          alert(e);
+        });
     });
     slot('EOF', (response: Response) => {
       this.recieve(response);
@@ -109,6 +136,7 @@ export default class Editor extends React.Component<Props, State> {
       // console.log(e);
     });
     editor.on('guttermousedown', (e: GutterMousedownEvent) => {
+      const AceRange = this.ace.acequire('ace/range').Range;
       const target: GutterMousedownEventTarget = e.domEvent.currentTarget;
       if (
         typeof target.className !== 'undefined' &&
@@ -126,15 +154,29 @@ export default class Editor extends React.Component<Props, State> {
       const session: AceAjax.IEditSession = e.editor.getSession();
       if (this.lineNumOfBreakpoint.includes(row)) {
         session.clearBreakpoint(row);
+        signal('cancelStatementHighlight', row);
+        const line = d3.selectAll('.ace_line').filter((d, i) => i === row);
+        line.classed('highlight' + row, false);
         this.lineNumOfBreakpoint = this.lineNumOfBreakpoint.filter(
           (n) => n !== row
         );
       } else {
         session.setBreakpoint(row, 'ace_breakpoint');
         this.lineNumOfBreakpoint.push(row);
+        const line = d3.selectAll('.ace_line').filter((d, i) => i === row);
+        line.classed('highlight' + row, true);
+        signal('statementHighlight', row);
       }
       e.stop();
     });
+  }
+
+  componentDidUpdate() {
+    d3.selectAll('.ace_line')
+      // .filter((d, i) => inArray(i, this.lineNumOfBreakpoint) >= 0)
+      .attr('class', (d, i) => {
+        return `ace_line highlight${i}`;
+      });
   }
 
   sourceCodeKey = (prog: string) =>
@@ -166,6 +208,7 @@ export default class Editor extends React.Component<Props, State> {
       lineNumOfBreakpoint,
       progLang,
     };
+    this.controlEvent = controlEvent;
     if (controlEvent === 'SyntaxCheck') {
       server
         .send(request)
@@ -212,11 +255,20 @@ export default class Editor extends React.Component<Props, State> {
         sourcecode,
         files,
         lastState,
+        stepCount,
+        linesShowUp,
+        allVariables,
       } = response;
       this.isDebugging = debugState !== 'Stop';
       this.sentSourcecode = sourcecode;
       if (debugState === 'Executing') {
         return;
+      }
+      if (debugState === 'First') {
+        signal('init', stepCount, linesShowUp, allVariables);
+      }
+      if (this.controlEvent !== 'JumpTo') {
+        signal('changeStep', step);
       }
       signal('changeState', debugState, step);
       signal('changeOutput', output);
@@ -244,7 +296,7 @@ export default class Editor extends React.Component<Props, State> {
         codeRange.begin.y - 1,
         codeRange.begin.x,
         codeRange.end.y - 1,
-        codeRange.end.x + 1
+        codeRange.end.x
       );
       editor.resize(true);
       // tslint:disable-next-line:no-empty
@@ -291,6 +343,21 @@ export default class Editor extends React.Component<Props, State> {
     );
   }
 
+  // renderSlider() {
+  //   return (
+  //     <SliderWithTooltip
+  //       style={{ margin: '0px 0px 20px 0px' }}
+  //       value={this.props.value}
+  //       min={this.state.min}
+  //       max={this.state.max}
+  //       step={1}
+  //       marks={this.state.marks}
+  //       included={false}
+  //       onChange={this.props.onStepChange}
+  //     />
+  //   );
+  // }
+
   renderEditor() {
     const mode = this.props.progLang;
     const { fontSize, theme } = this.state;
@@ -312,7 +379,7 @@ export default class Editor extends React.Component<Props, State> {
           showLineNumbers: true,
           readOnly: false,
         }}
-        style={{ height: '62vh', width: 'auto' }}
+        style={{ height: '62vh', width: '24vw' }}
         className="editorMain"
         onChange={(text: string) => {
           this.sourcecode = text;

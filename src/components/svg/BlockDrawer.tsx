@@ -3,6 +3,7 @@ import { Stack } from 'unicoen.ts/dist/interpreter/Engine/Stack';
 import { Variable } from 'unicoen.ts/dist/interpreter/Engine/Variable';
 import { Vector } from 'vector2d';
 import { inArray } from 'jquery';
+import colors from '../Color';
 
 export type BlockCellContainer = BlockCell[];
 export type BlockTable = BlockCellContainer[];
@@ -50,7 +51,7 @@ export function valueToArray(value, type) {
     });
   } else {
     if (type === 'char' || type === 'unsignedchar') {
-      return typeof value === undefined || value == 0
+      return typeof value === undefined || value === 0
         ? ''
         : String.fromCharCode(value);
     } else {
@@ -84,17 +85,18 @@ export class BlockDrawer {
   private update() {
     if (this.execState === null) return;
     const stacks = this.execState.getStacks();
-    stacks.forEach((stack) => {
+    stacks.forEach((stack, i) => {
       if (stack.name !== 'GLOBAL') {
         const blockStack = new BlockStack(stack);
+        blockStack.setColor(colors[i - 1]);
         this.blockStacks.push(blockStack);
       }
     });
   }
 
   private calcPos() {
-    const originX = 50;
-    const originY = 50;
+    const originX = 10;
+    const originY = 5;
     const offsetX = 40;
     const offsetY = 40;
     let index = 0;
@@ -179,6 +181,7 @@ export class BlockStack {
   private stack: Stack;
   private width: number;
   private height: number;
+  private color: string;
 
   constructor(stack: Stack) {
     this.stack = stack;
@@ -196,6 +199,10 @@ export class BlockStack {
 
   public setHeight(height: number) {
     this.height = height;
+  }
+
+  public setColor(color: string) {
+    this.color = color;
   }
 
   private makeBlockTable(): BlockTable {
@@ -237,6 +244,10 @@ export class BlockStack {
   public getName() {
     let res = this.key.replace(/[&\|\\\*:^%$@()\[\].]/g, '_');
     return res;
+  }
+
+  public getColor() {
+    return this.color;
   }
 }
 

@@ -6,11 +6,10 @@ import { signal } from '../emitter';
 import Hashids from 'hashids/cjs';
 import stringHash from 'string-hash';
 import * as d3 from 'd3';
-import typeToHeight from './MemoryHeight';
 
 export type SvgRow = SvgCell[];
 export type SvgTable = SvgRow[];
-export type SvgMemoryTable = SvgMemoryCell[];
+
 
 function sum(arr: number[], len: number) {
   let s = 0;
@@ -21,7 +20,7 @@ function sum(arr: number[], len: number) {
 }
 
 function getWidth(str: string, fontSize: number) {
-  if (str.length == 0) return 0;
+  if (str.length === 0) return 0;
   let text = d3
     .select('#svg')
     .append('text')
@@ -382,7 +381,7 @@ export class SvgStack {
       const cellss = svgVariable.getSvgTable();
       tempSvgTable.push(...cellss);
     }
-    if (tempSvgTable.length == 0) {
+    if (tempSvgTable.length === 0) {
       return tempSvgTable;
     }
     let len = this.hasArry ? 5 : 4;
@@ -468,10 +467,10 @@ export class SvgVariable {
     let valueStr = value.toString();
 
     const rawType = this.getTypedef(type);
-    if (rawType.indexOf('*') !== -1 && value != null) {
+    if (rawType.indexOf('*') !== -1 && value !== null) {
       valueStr = '0x' + value.toString(16).toUpperCase();
     }
-    if (rawType === 'char' && value != null) {
+    if (rawType === 'char' && value !== null) {
       valueStr += ` '${String.fromCharCode(valueStr)}'`;
     }
 
@@ -636,239 +635,3 @@ export class SvgCell {
   }
 }
 
-export class MemoryDrawer {
-  private svgMemoryTable: SvgMemoryTable = [];
-  private execState: ExecState | null = null;
-  private minAddress: number;
-  private maxAddress: number;
-  private width: number;
-  private x: number;
-  private y: number;
-  private getTypedef: (type: string) => string;
-  constructor(execState?: ExecState) {
-    if (typeof execState === 'undefined') {
-      this.getTypedef = (type: string) => type;
-      return;
-    }
-    this.execState = execState;
-    this.update();
-    this.calc();
-  }
-
-  private update() {
-    if (this.execState === null) {
-      return;
-    }
-    const stacks = this.execState.getStacks();
-    for (const stack of stacks) {
-      if (stack.name == 'GLOBAL') continue;
-      const svgMemory = new SvgMemory(stack, this.getTypedef);
-      this.svgMemoryTable.push(...svgMemory.getSvgMemoryTable());
-    }
-  }
-
-  private calc() {
-    const minAddresses = [];
-    const maxAddresses = [];
-    const widths = [];
-    this.svgMemoryTable.forEach((cell) => {
-      if (cell.getAddress() > 50000) {
-        minAddresses.push(cell.getAddress());
-        maxAddresses.push(cell.getAddress() + cell.getHeight() - 1);
-        widths.push(cell.getWidth());
-      }
-    });
-    let min = 99999999;
-    let max = 0;
-    let maxw = 0;
-    minAddresses.forEach((addr) => {
-      min = Math.min(min, addr);
-    });
-    maxAddresses.forEach((addr) => {
-      max = Math.max(max, addr);
-    });
-    widths.forEach((w) => {
-      maxw = Math.max(maxw, w);
-    });
-    this.minAddress = min;
-    this.maxAddress = max;
-    this.width = maxw;
-  }
-
-  public getMinAddress() {
-    return this.minAddress;
-  }
-
-  public getMaxAddress() {
-    return this.maxAddress;
-  }
-
-  public getWidth() {
-    return this.width;
-  }
-
-  public getSvgMemoryTable() {
-    return this.svgMemoryTable;
-  }
-}
-
-export class SvgMemory {
-  private svgMemoryTable: SvgMemoryTable;
-
-  constructor(
-    private readonly stack: Stack,
-    private readonly getTypedef: (type: string) => string
-  ) {
-    this.svgMemoryTable = this.makeSvgMemoryTable();
-  }
-
-  private makeSvgMemoryTable(): SvgMemoryTable {
-    const svgMemoryTable: SvgMemoryTable = [];
-    const variables = this.stack.getVariables();
-    const stackName = this.stack.name;
-    for (const variable of variables) {
-      const value = variable.getValue();
-      const isArrayVariable = Array.isArray(value);
-      const svgMemoryVariable = isArrayVariable
-        ? new SvgMemoryArrayVariable(variable, stackName)
-        : new SvgMemoryVariable(variable, stackName);
-      const cellss = svgMemoryVariable.getSvgMemoryTable();
-      svgMemoryTable.push(...cellss);
-    }
-    return svgMemoryTable;
-  }
-
-  public getSvgMemoryTable() {
-    return this.svgMemoryTable;
-  }
-}
-
-export class SvgMemoryVariable {
-  public readonly key: string;
-  protected svgMemoryTable: SvgMemoryTable = [];
-  constructor(
-    protected readonly variable: Variable,
-    protected readonly stackName: string
-  ) {
-    this.key = `${this.stackName}-${variable.name}`;
-    this.key = this.key.replace(/[&\|\\\*:^%$@()\[\]]/g, '');
-    this.init(variable);
-  }
-
-  protected init(variable: Variable) {
-    const { type, name, address } = variable;
-    const cell = this.pushCell(name);
-    cell.setAddress(address);
-    cell.setType(type);
-    cell.setHeight(typeToHeight(type));
-  }
-
-  public getSvgMemoryTable(): SvgMemoryCell[] {
-    return this.svgMemoryTable;
-  }
-
-  protected pushCell(name: string) {
-    const cell = new SvgMemoryCell(name, this.key, this.stackName);
-    this.svgMemoryTable.push(cell);
-    return cell;
-  }
-}
-
-export class SvgMemoryArrayVariable extends SvgMemoryVariable {
-  constructor(variable: Variable, stackName: string) {
-    super(variable, stackName);
-  }
-
-  protected init(variable: Variable) {
-    const { type, name, address } = variable;
-    const cell = this.pushCell(name);
-    cell.setAddress(address);
-    cell.setType(type);
-    cell.setHeight(typeToHeight(type));
-  }
-
-  public getSvgMemoryTable(): SvgMemoryTable {
-    const children: SvgMemoryTable = [];
-    const value: Variable[] = this.variable.getValue();
-    for (const v of value) {
-      const svgMemoryVariable = Array.isArray(v.getValue())
-        ? new SvgMemoryArrayVariable(v, this.stackName)
-        : new SvgMemoryVariable(v, this.stackName);
-      const table = svgMemoryVariable.getSvgMemoryTable();
-      children.push(...table);
-    }
-    return this.svgMemoryTable.concat(children);
-  }
-}
-
-export class SvgMemoryCell {
-  public static readonly HEIGHT: number = 20;
-  private address: number;
-  private readonly key: string;
-  private type: string;
-  private name: string;
-  private stackName: string;
-  private pos: Vector = new Vector(-1, -1);
-  private width: number;
-  private height: number;
-
-  constructor(private text: string, key: string, stackName: string) {
-    this.key = key;
-    this.key = this.key.replace(/[&\|\\\*:^%$@()\[\]]/g, '');
-    this.name = text;
-    this.stackName = stackName;
-    this.width = getWidth(stackName + '_' + text, 15);
-  }
-
-  public getAddress() {
-    return this.address;
-  }
-
-  public setAddress(address: number) {
-    this.address = address;
-  }
-
-  public getKey() {
-    return this.key;
-  }
-
-  public x() {
-    return this.pos.getX();
-  }
-
-  public y() {
-    return this.pos.getY();
-  }
-
-  public getName() {
-    return this.name;
-  }
-
-  public getType() {
-    return this.type;
-  }
-
-  public setType(type: string) {
-    this.type = type;
-  }
-
-  public getWidth() {
-    return this.width;
-  }
-
-  public getStackName() {
-    return this.stackName;
-  }
-
-  public setStackName(stackName: string) {
-    this.stackName = stackName;
-  }
-
-  public getHeight() {
-    return this.height;
-  }
-
-  public setHeight(height: number) {
-    this.height = height;
-  }
-}

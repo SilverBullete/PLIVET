@@ -114,7 +114,7 @@ export class AnimationDrawer {
   public methodCall(uniMethodCall) {
     const methodName = uniMethodCall.methodName.name;
     this.execState.getStacks().forEach((stack) => {
-      if (methodName == stack.name) {
+      if (methodName === stack.name) {
         this.state = 'methodCall';
         this.postArgs = [];
         this.getMethodArgs(uniMethodCall);
@@ -122,7 +122,7 @@ export class AnimationDrawer {
       }
     });
     this.lastState.getStacks().forEach((stack) => {
-      if (methodName == stack.name) {
+      if (methodName === stack.name) {
         this.state = 'methodCall';
         this.postArgs = [];
         this.getMethodArgs(uniMethodCall);
@@ -156,7 +156,7 @@ export class AnimationDrawer {
     }
     const variables = this.stack.getVariables();
     for (let i = 0; i < variables.length; i++) {
-      if (variables[i].getName() == uniVariableDef.name) {
+      if (variables[i].getName() === uniVariableDef.name) {
         const type = variables[i].type;
         const value = variables[i].getValue();
         this.variableKeys.push(key);
@@ -192,7 +192,7 @@ export class AnimationDrawer {
 
   private travelValue(returnValue) {
     let returnValueClass = returnValue.constructor.name;
-    if (returnValueClass == 'UniIdent') {
+    if (returnValueClass === 'UniIdent') {
       this.postArgs.push(
         (
           this.lastState.getStacks()[this.lastState.getStacks().length - 1]
@@ -202,7 +202,7 @@ export class AnimationDrawer {
         ).replace(/[&\|\\\*:^%$@()\[\].]/g, '_')
       );
       return;
-    } else if (returnValueClass == 'UniBinOp') {
+    } else if (returnValueClass === 'UniBinOp') {
       this.travelValue(returnValue.left);
       this.travelValue(returnValue.right);
     }
@@ -210,11 +210,11 @@ export class AnimationDrawer {
 
   private travelArg(arg, idx) {
     let returnValueClass = arg.constructor.name;
-    if (this.postArgs.length == idx) {
+    if (this.postArgs.length === idx) {
       this.postArgs.push(undefined);
     }
-    if (returnValueClass == 'UniIdent') {
-      if (this.postArgs[idx] == undefined) {
+    if (returnValueClass === 'UniIdent') {
+      if (this.postArgs[idx] === undefined) {
         this.postArgs[idx] = (
           this.lastState.getStacks()[this.lastState.getStacks().length - 1]
             .name +
@@ -223,7 +223,7 @@ export class AnimationDrawer {
         ).replace(/[&\|\\\*:^%$@()\[\].]/g, '_');
       }
       return;
-    } else if (returnValueClass == 'UniBinOp') {
+    } else if (returnValueClass === 'UniBinOp') {
       this.travelArg(arg.left, idx);
       this.travelArg(arg.right, idx);
     }

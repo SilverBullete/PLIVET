@@ -2,6 +2,8 @@ import { SyntaxErrorData } from 'unicoen.ts/dist/interpreter/mapper/SyntaxErrorD
 import { ExecState } from 'unicoen.ts/dist/interpreter/Engine/ExecState';
 import { signal } from './components/emitter';
 import { Interpreter } from 'unicoen.ts/dist/interpreter/Interpreter';
+import { inArray } from 'jquery';
+import { UniBinOp } from 'unicoen.ts/dist/node/UniBinOp';
 
 export type CONTROL_EVENT =
   | 'Exec'
@@ -11,7 +13,8 @@ export type CONTROL_EVENT =
   | 'StepBack'
   | 'Step'
   | 'StepAll'
-  | 'SyntaxCheck';
+  | 'SyntaxCheck'
+  | 'JumpTo';
 export type DEBUG_STATE =
   | 'First'
   | 'Debugging'
@@ -25,7 +28,8 @@ export class Request {
     public sourcecode: string,
     public stdinText?: string,
     public lineNumOfBreakpoint?: number[],
-    public progLang?: string
+    public progLang?: string,
+    public step?: number
   ) {}
 }
 
@@ -38,7 +42,10 @@ export class Response {
     public errors: SyntaxErrorData[],
     public files: Map<string, ArrayBuffer>,
     public execState?: ExecState,
-    public lastState?: ExecState
+    public lastState?: ExecState,
+    public stepCount?: number,
+    public linesShowUp?: any,
+    public allVariables?: any
   ) {}
 }
 
@@ -117,6 +124,7 @@ class Server {
       stdinText,
       lineNumOfBreakpoint,
       progLang,
+      step,
     } = request;
 
     switch (controlEvent) {
@@ -138,6 +146,9 @@ class Server {
       case 'StepAll': {
         return this.StepAll(sourcecode, lineNumOfBreakpoint);
       }
+      case 'JumpTo': {
+        return this.JumpTo(sourcecode, step);
+      }
       case 'Exec': {
         return this.Exec(sourcecode, progLang, lineNumOfBreakpoint);
       }
@@ -152,12 +163,24 @@ class Server {
     if (this.interpreter === null) {
       throw new Error('interpreter is not found');
     }
+    const lineCount = sourcecode.split(/\r\n|\r|\n/).length;
     const state = this.interpreter.startStepExecution(sourcecode);
     const execState = this.recordExecState(state);
     const stdout = this.interpreter.getStdout();
     const output = this.recordOutputText(stdout);
-    this.isExecuting = true;
-    const res: Response = {
+    const linesShowUp = [];
+    const allVariables = {};
+    const VariableShowUp = [];
+    for (let i = 1; i <= lineCount; i++) {
+      linesShowUp.push({
+        lineNumber: i,
+        steps: [],
+        color: '',
+        depth: [],
+        visible: true,
+      });
+    }
+    let ret: Response = {
       execState,
       output,
       sourcecode,
@@ -166,7 +189,88 @@ class Server {
       errors: [],
       files: this.files,
     };
+    this.isExecuting = true;
+    while (ret.debugState !== 'EOF' && ret.debugState !== 'stdin') {
+      const currentExpr = this.stateHistory[this.count].getCurrentExpr();
+      const nextExpr = this.stateHistory[this.count].getNextExpr();
+      const stacks = this.stateHistory[this.count].getStacks();
+      const functionName = stacks[stacks.length - 1].name;
+      let depth = 1;
+      if (functionName.split('.').length > 1) {
+        depth = Number(functionName.split('.')[1]);
+      }
+      const nCodeRange = nextExpr.codeRange;
+      linesShowUp[nCodeRange.begin.y - 1]['steps'].push(this.count + 1);
+      linesShowUp[nCodeRange.begin.y - 1]['depth'].push(depth);
+
+      stacks.forEach((stack) => {
+        const stackName = stack.name.split('.')[0];
+        if (!(stackName in allVariables)) {
+          allVariables[stackName] = {};
+        }
+        stack.getVariables().forEach((variable) => {
+          if (inArray(variable.name, allVariables[stackName]) < 0) {
+            allVariables[stackName][variable.name] = VariableShowUp.length;
+            VariableShowUp.push({
+              function: stackName,
+              name: variable.name,
+              steps: [this.count],
+              color: '',
+              visible: true,
+            });
+          }
+        });
+      });
+      const currentClassName = currentExpr.constructor.name;
+      const nextClassName = nextExpr.constructor.name;
+      if (currentClassName === 'UniBinOp') {
+        const res = this.binOp(currentExpr);
+        if (res) {
+          const stack = stacks[stacks.length - 1];
+          const variableName = res;
+          VariableShowUp[allVariables[stack.name][variableName]]['steps'].push(
+            this.count
+          );
+        }
+      }
+      if (nextClassName === 'UniBinOp') {
+      }
+      ret = this.Step(sourcecode);
+    }
+    console.log(VariableShowUp);
+
+    const step = this.count;
+    this.isExecuting = true;
+    const res = this.BackAll(sourcecode);
+    res.stepCount = step;
+    res.linesShowUp = linesShowUp;
+    res.allVariables = allVariables;
     return res;
+  }
+
+  private binOp(uniBinOp) {
+    const operator = uniBinOp.operator;
+    const right = uniBinOp.right;
+    const rightClassName = right.constructor.name;
+    switch (rightClassName) {
+      case 'UniMethodCall':
+        return false;
+      case 'UniBinOp':
+        this.binOp(right);
+        break;
+    }
+    if (operator !== '=') {
+      const left = uniBinOp.left;
+      const leftClassName = left.constructor.name;
+      switch (leftClassName) {
+        case 'UniMethodCall':
+          return false;
+        case 'UniBinOp':
+          this.binOp(left);
+          break;
+      }
+    }
+    return uniBinOp.left.expr.name;
   }
 
   private Stop(sourcecode: string) {
@@ -258,7 +362,7 @@ class Server {
       }
       let state = this.interpreter.stepExecute();
       // let maxSkip = 10;
-      // while (state.getCurrentExpr().codeRange == null && 0 < --maxSkip) {
+      // while (state.getCurrentExpr().codeRange === null && 0 < --maxSkip) {
       //   state = this.engine.stepExecute();
       // }
       const execState = this.recordExecState(state);
@@ -337,6 +441,27 @@ class Server {
       errors: [],
       files: this.files,
     };
+  }
+
+  private JumpTo(sourcecode: string, step: number) {
+    this.count = step;
+    const execState = this.stateHistory[this.count];
+    let lastState = undefined;
+    if (this.count > 0) {
+      lastState = this.stateHistory[this.count - 1];
+    }
+    const output = this.outputsHistory[this.count];
+    const ret: Response = {
+      execState,
+      lastState: lastState,
+      output,
+      sourcecode,
+      debugState: 'Debugging',
+      step: this.count,
+      errors: [],
+      files: this.files,
+    };
+    return ret;
   }
 
   private async Exec(

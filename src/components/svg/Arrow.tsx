@@ -66,7 +66,7 @@ export default class Arrow extends React.Component<Props, State> {
 
   drawArrowMarker(key, color) {
     let defs = d3.select('#svg').select('defs');
-    if (defs['_groups'][0].length == 0) {
+    if (defs['_groups'][0].length === 0) {
       defs = d3.select('#svg').append('defs');
     }
     let arrowMarker = defs

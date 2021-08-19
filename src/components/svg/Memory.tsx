@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { MemoryDrawer, SvgMemory } from './SvgDrawer';
+import { MemoryDrawer, SvgMemory } from './MemoryDrawer';
 import * as d3 from 'd3';
 
 interface Props {
@@ -55,18 +55,20 @@ export default class Memory extends React.Component<Props, State> {
         list.push(
           <React.Fragment>
             <rect
-              x="100.5"
-              y={50.5 + 20 * (cell.getAddress() - minAddress)}
-              width={width - 0.9}
-              height={cell.getHeight() * 20 - 1.5}
+              x="100"
+              y={50 + 20 * (cell.getAddress() - minAddress)}
+              width={width}
+              height={cell.getHeight() * 20}
               fill="white"
+              style={{ stroke: cell.getColor(), strokeWidth: '1.5px' }}
             ></rect>
             <text
               x="110"
               y={65 + 20 * (cell.getAddress() - minAddress)}
               fontSize="15"
+              fill={cell.getColor()}
             >
-              {cell.getStackName() + '_' + cell.getName()}
+              {cell.getName()}
             </text>
           </React.Fragment>
         );

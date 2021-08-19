@@ -1,5 +1,5 @@
 import React from 'react';
-import { SvgMemoryCell } from './SvgDrawer';
+import { SvgMemoryCell } from './MemoryDrawer';
 import hexToRgba from '../Color';
 import * as d3 from 'd3';
 

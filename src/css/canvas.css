@@ -1,23 +1,27 @@
 #display {
     width: 100%;
-    height: 95vh;
+    height: 98vh;
     position: relative;
 }
 
 .left, .right{
     position: absolute;
     display: inline-block;
-    height: 100%;
-    border: 1px solid black;
+    height: 68vh;
+    top: 25vh;
 }
 
 .left{
-    top: 0;
-    left: 0;;
+    left: 0;
 }
 
 .right{
     left: 70%;
-    overflow-y: scroll;
-    
+}
+
+#keyframe{
+    position: absolute;
+    top:1vh;
+    width: 100%;
+    height: 17vh;
 }
