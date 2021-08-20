@@ -8,7 +8,7 @@ interface Props {
 
 interface State {}
 
-function wrapWord(text, width) {
+export function wrapWord(text, width, className) {
   text.each(function () {
     let text = d3.select(this),
       words = text.text().split('').reverse(),
@@ -19,10 +19,10 @@ function wrapWord(text, width) {
       tspan = text
         .text(null)
         .append('tspan')
-        .attr('class', 'value')
+        .attr('class', className)
         .attr('x', x)
         .attr('y', y);
-    while (word === words.pop()) {
+    while ((word = words.pop())) {
       line.push(word);
       tspan.text(line.join(''));
       if (tspan.node().getComputedTextLength() > width) {
@@ -41,7 +41,7 @@ export default class Block extends React.Component<Props, State> {
   }
 
   componentDidUpdate() {
-    wrapWord(d3.selectAll('.value'), BlockCell.WIDTH - 10);
+    wrapWord(d3.selectAll('.value'), BlockCell.WIDTH - 10, 'value');
   }
 
   renderBlockBackground() {
