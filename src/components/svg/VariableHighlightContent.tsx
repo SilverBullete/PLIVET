@@ -8,9 +8,13 @@ import { MDBCard, MDBCardBody, MDBRow, MDBCol } from 'mdb-react-ui-kit';
 interface Props {
   variablesHighlight: any;
   options: any;
+  addVariableHighlight: any;
 }
 
-interface State {}
+interface State {
+  funcName: any;
+  varName: any;
+}
 
 export default class VariablesHighlightContent extends React.Component<
   Props,
@@ -20,17 +24,32 @@ export default class VariablesHighlightContent extends React.Component<
     super(props);
   }
 
+  onChange(_this, value) {
+    _this.setState({ funcName: value[0], varName: value[1] });
+  }
+
   render() {
-    const { variablesHighlight, options } = this.props;
+    const { variablesHighlight, options, addVariableHighlight } = this.props;
     return (
       <div>
         <h4>Highlight Variables</h4>
         <MDBRow style={{ height: 32 }}>
           <MDBCol size="9">
-            <Cascader options={options}></Cascader>
+            <Cascader
+              options={options}
+              onChange={(value) => {
+                this.setState({ funcName: value[0], varName: value[1] });
+              }}
+            ></Cascader>
           </MDBCol>
           <MDBCol size="2" style={{ maginLeft: -10 }}>
-            <Button type="primary" icon={<PlusOutlined />}></Button>
+            <Button
+              type="primary"
+              onClick={() => {
+                addVariableHighlight(this.state.funcName, this.state.varName);
+              }}
+              icon={<PlusOutlined />}
+            ></Button>
           </MDBCol>
         </MDBRow>
         <PerfectScrollbar>

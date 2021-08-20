@@ -45,7 +45,8 @@ export class Response {
     public lastState?: ExecState,
     public stepCount?: number,
     public linesShowUp?: any,
-    public allVariables?: any
+    public allVariables?: any,
+    public variableShowUp?: any
   ) {}
 }
 
@@ -170,7 +171,7 @@ class Server {
     const output = this.recordOutputText(stdout);
     const linesShowUp = [];
     const allVariables = {};
-    const VariableShowUp = [];
+    const variableShowUp = [];
     for (let i = 1; i <= lineCount; i++) {
       linesShowUp.push({
         lineNumber: i,
@@ -209,9 +210,11 @@ class Server {
           allVariables[stackName] = {};
         }
         stack.getVariables().forEach((variable) => {
-          if (inArray(variable.name, allVariables[stackName]) < 0) {
-            allVariables[stackName][variable.name] = VariableShowUp.length;
-            VariableShowUp.push({
+          if (
+            inArray(variable.name, Object.keys(allVariables[stackName])) < 0
+          ) {
+            allVariables[stackName][variable.name] = variableShowUp.length;
+            variableShowUp.push({
               function: stackName,
               name: variable.name,
               steps: [this.count],
@@ -222,46 +225,88 @@ class Server {
         });
       });
       const currentClassName = currentExpr.constructor.name;
-      const nextClassName = nextExpr.constructor.name;
       if (currentClassName === 'UniBinOp') {
         const res = this.binOp(currentExpr);
         if (res) {
           const stack = stacks[stacks.length - 1];
           const variableName = res;
-          VariableShowUp[allVariables[stack.name][variableName]]['steps'].push(
-            this.count
-          );
+          variableShowUp[allVariables[stack.name.split('.')[0]][variableName]][
+            'steps'
+          ].push(this.count);
         }
       }
-      if (nextClassName === 'UniBinOp') {
+      let lastExpr = null;
+      if (this.count > 0) {
+        lastExpr = this.stateHistory[this.count - 1];
+        const nextClassName = lastExpr.getNextExpr().constructor.name;
+        if (nextClassName === 'UniBinOp' && currentClassName !== 'UniBinOp') {
+          const res = this.binOp(lastExpr);
+          if (res) {
+            const stack = stacks[stacks.length - 1];
+            const variableName = res;
+            variableShowUp[
+              allVariables[stack.name.split('.')[0]][variableName]
+            ]['steps'].push(this.count + 1);
+          }
+        } else if (
+          nextClassName === 'UniReturn' &&
+          currentClassName === 'UniVariableDec'
+        ) {
+          const stack = stacks[stacks.length - 1];
+          variableShowUp[
+            allVariables[stack.name.split('.')[0]][this.uniReturn(currentExpr)]
+          ]['steps'].push(this.count);
+        } else if (
+          nextClassName === 'UniReturn' &&
+          currentClassName === 'UniBinOp'
+        ) {
+          const res = this.returnBinOp(currentExpr);
+          if (res) {
+            const stack = stacks[stacks.length - 1];
+            const variableName = res;
+            variableShowUp[
+              allVariables[stack.name.split('.')[0]][variableName]
+            ]['steps'].push(this.count);
+          }
+        }
       }
+
       ret = this.Step(sourcecode);
     }
-    console.log(VariableShowUp);
-
     const step = this.count;
     this.isExecuting = true;
     const res = this.BackAll(sourcecode);
     res.stepCount = step;
     res.linesShowUp = linesShowUp;
     res.allVariables = allVariables;
+    res.variableShowUp = variableShowUp;
     return res;
   }
 
   private binOp(uniBinOp) {
     const operator = uniBinOp.operator;
     const right = uniBinOp.right;
-    const rightClassName = right.constructor.name;
+    let rightClassName = '';
+    if (right) {
+      rightClassName = right.constructor.name;
+    }
     switch (rightClassName) {
       case 'UniMethodCall':
-        return false;
+        if (right.methodName.name === 'malloc') {
+          break;
+        } else {
+          return false;
+        }
       case 'UniBinOp':
         this.binOp(right);
         break;
     }
     if (operator !== '=') {
       const left = uniBinOp.left;
-      const leftClassName = left.constructor.name;
+      let leftClassName = '';
+      if (left) {
+        leftClassName = left.constructor.name;
+      }
       switch (leftClassName) {
         case 'UniMethodCall':
           return false;
@@ -270,7 +315,30 @@ class Server {
           break;
       }
     }
-    return uniBinOp.left.expr.name;
+    let left = uniBinOp.left;
+    if (!left) {
+      return false;
+    }
+    while (left.constructor.name !== 'UniIdent') {
+      if (left.constructor.name === 'UniUnaryOp') {
+        left = left.expr;
+      } else if (left.constructor.name === 'UniBinOp') {
+        left = left.left;
+      }
+    }
+    return left.name;
+  }
+
+  private uniReturn(expr) {
+    return expr.variables[0].name;
+  }
+  private returnBinOp(uniBinOp) {
+    const operator = uniBinOp.operator;
+    if (operator === '=') {
+      const left = uniBinOp.left;
+      return left.name;
+    }
+    return false;
   }
 
   private Stop(sourcecode: string) {

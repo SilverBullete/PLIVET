@@ -258,6 +258,7 @@ export default class Editor extends React.Component<Props, State> {
         stepCount,
         linesShowUp,
         allVariables,
+        variableShowUp,
       } = response;
       this.isDebugging = debugState !== 'Stop';
       this.sentSourcecode = sourcecode;
@@ -265,7 +266,7 @@ export default class Editor extends React.Component<Props, State> {
         return;
       }
       if (debugState === 'First') {
-        signal('init', stepCount, linesShowUp, allVariables);
+        signal('init', stepCount, linesShowUp, allVariables, variableShowUp);
       }
       if (this.controlEvent !== 'JumpTo') {
         signal('changeStep', step);
