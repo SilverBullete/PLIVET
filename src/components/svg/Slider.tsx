@@ -116,12 +116,26 @@ export default class Slider extends React.Component<Props, State> {
         onMouseDown={this.dragFromSVG}
         onMouseMove={this.mouseMove}
       >
-        <rect height={4} fill={unselectedColor} x={0} y={10} width={width} />
+        <defs>
+          <marker
+            id="arrow"
+            markerUnits="strokeWidth"
+            markerWidth="12"
+            markerHeight="12"
+            viewBox="0 0 12 12"
+            refX="6"
+            refY="6"
+            orient="auto"
+          >
+            <path d="M2,2 L10,6 L2,10 L6,6 L2,2" style={{ fill: '#000000' }} />
+          </marker>
+        </defs>
+        <rect height={4} fill={unselectedColor} x={0} y={48} width={width} />
         <rect
           height={4}
           fill={selectedColor}
           x={scale(step)}
-          y={10}
+          y={48}
           width={selectionWidth}
         />
         <g
@@ -139,7 +153,7 @@ export default class Slider extends React.Component<Props, State> {
             }}
             r={10}
             cx={0}
-            cy={12.5}
+            cy={50.5}
             fill="#ddd"
             strokeWidth="1"
           />
@@ -153,7 +167,7 @@ export default class Slider extends React.Component<Props, State> {
             onMouseDown={this.dragStart.bind(this)}
             r={9}
             cx={0}
-            cy={12}
+            cy={50}
             fill="white"
             stroke="#ccc"
             strokeWidth="1"
@@ -169,7 +183,7 @@ export default class Slider extends React.Component<Props, State> {
                       <rect
                         height={30}
                         x={scale(_step) - 1.5}
-                        y={-20}
+                        y={18}
                         width={3}
                         fill={m['color']}
                       ></rect>
@@ -196,7 +210,7 @@ export default class Slider extends React.Component<Props, State> {
                       <rect
                         height={h}
                         x={scale(_step) - 1.5}
-                        y={14}
+                        y={52}
                         width={3}
                         fill={m['color']}
                       ></rect>
@@ -206,6 +220,31 @@ export default class Slider extends React.Component<Props, State> {
               </g>
             );
           })}
+        </g>
+        <g>
+          <line
+            x1={620}
+            x2={620}
+            y1={10}
+            y2={90}
+            stroke="black"
+            strokeWidth={2}
+            markerEnd="url(#arrow)"
+          ></line>
+          <line
+            x1={620}
+            x2={730}
+            y1={50}
+            y2={50}
+            stroke="black"
+            strokeWidth={2}
+          ></line>
+          <text x={630} y={40} fontSize="15">
+            Variables
+          </text>
+          <text x={630} y={75} fontSize="15">
+            Statements
+          </text>
         </g>
       </svg>
     );

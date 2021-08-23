@@ -1,4 +1,5 @@
 import * as React from 'react';
+import ControlPanel from './ControlPanel';
 import Slider from './Slider';
 import VariableHighlightContent from './VariableHighlightContent';
 import StatementsHighlightContent from './StatementsHighlightContent';
@@ -9,6 +10,7 @@ import 'rc-color-picker/assets/index.css';
 import colors from '../Color';
 import * as d3 from 'd3';
 import { inArray } from 'jquery';
+import { DEBUG_STATE } from '../../server';
 
 interface Props {}
 
@@ -22,6 +24,8 @@ interface State {
   options: any;
   linesShowUp: any;
   variableShowUp: any;
+  debugStatus: string;
+  debugState: DEBUG_STATE;
 }
 
 export default class KeyframeContent extends React.Component<Props, State> {
@@ -37,6 +41,8 @@ export default class KeyframeContent extends React.Component<Props, State> {
       options: [],
       linesShowUp: [],
       variableShowUp: [],
+      debugStatus: '',
+      debugState: 'Stop',
     };
     slot('changeStep', (step: number) => {
       this.setState({ step: step });
@@ -44,15 +50,13 @@ export default class KeyframeContent extends React.Component<Props, State> {
     slot('statementHighlight', (lineNumber: number) => {
       const { statementsHighlight, linesShowUp } = this.state;
       const statement = linesShowUp[lineNumber];
-      statement['color'] = colors[statementsHighlight.length];
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      statement['color'] = color;
       statementsHighlight.push(statement);
       this.setState({
         statementsHighlight: statementsHighlight,
       });
-      d3.selectAll(`.highlight${lineNumber}`).style(
-        'background-color',
-        colors[statementsHighlight.length - 1]
-      );
+      d3.selectAll(`.highlight${lineNumber}`).style('background-color', color);
     });
     slot('cancelStatementHighlight', (lineNumber: number) => {
       const { statementsHighlight } = this.state;
@@ -88,10 +92,11 @@ export default class KeyframeContent extends React.Component<Props, State> {
           });
           options.push(temp);
         });
+        console.log(variableShowUp);
 
         this.setState({
           max: stepCount,
-          scale: linear().domain([0, stepCount]).range([0, 500]),
+          scale: linear().domain([0, stepCount]).range([0, 600]),
           variablesHighlight: [],
           statementsHighlight: [],
           options: options,
@@ -100,6 +105,15 @@ export default class KeyframeContent extends React.Component<Props, State> {
         });
       }
     );
+    slot('changeState', (debugState: DEBUG_STATE, step: number) => {
+      let debugStatus = '';
+      if (debugState === 'Debugging') {
+        debugStatus = `Step ${step}`;
+      } else {
+        debugStatus = debugState;
+      }
+      this.setState({ debugStatus, debugState });
+    });
   }
 
   changeStatementColor = (lineNumber: number, color: string) => {
@@ -117,14 +131,27 @@ export default class KeyframeContent extends React.Component<Props, State> {
     this.setState({ statementsHighlight: statementsHighlight });
   };
 
+  changeStatementVisible = (lineNumber: number) => {
+    const { statementsHighlight } = this.state;
+    for (let i = 0; i < statementsHighlight.length; i++) {
+      if (statementsHighlight[i]['lineNumber'] === lineNumber) {
+        statementsHighlight[i]['visible'] = !statementsHighlight[i]['visible'];
+        break;
+      }
+    }
+    this.setState({ statementsHighlight: statementsHighlight });
+  };
+
   addVariableHighlight = (funcName: string, varName: string) => {
     const { variablesHighlight, variableShowUp } = this.state;
+    const color = colors[Math.floor(Math.random() * colors.length)];
     let temp = null;
     for (let i = 0; i < variableShowUp.length; i++) {
       if (
         variableShowUp[i]['function'] === funcName &&
         variableShowUp[i]['name'] === varName
       ) {
+        variableShowUp[i].color = color;
         temp = variableShowUp[i];
         break;
       }
@@ -133,8 +160,37 @@ export default class KeyframeContent extends React.Component<Props, State> {
       variablesHighlight.push(temp);
       this.setState({
         variablesHighlight: variablesHighlight,
+        variableShowUp: variableShowUp,
       });
     }
+  };
+
+  removeVariableHighlight = (funcName: string, varName: string) => {
+    const { variablesHighlight, variableShowUp } = this.state;
+    for (let i = 0; i < variableShowUp.length; i++) {
+      if (
+        variableShowUp[i]['function'] === funcName &&
+        variableShowUp[i]['name'] === varName
+      ) {
+        variableShowUp[i]['visible'] = true;
+        break;
+      }
+    }
+    for (let i = 0; i < variablesHighlight.length; i++) {
+      for (let j = 0; j < variablesHighlight.length; j++) {
+        if (
+          variablesHighlight[j]['function'] === funcName &&
+          variablesHighlight[j]['name'] === varName
+        ) {
+          variablesHighlight.splice(i, 1);
+          break;
+        }
+      }
+    }
+    this.setState({
+      variablesHighlight: variablesHighlight,
+      variableShowUp: variableShowUp,
+    });
   };
 
   changeVariableColor = (funcName: string, varName: string, color: string) => {
@@ -145,13 +201,37 @@ export default class KeyframeContent extends React.Component<Props, State> {
         variableShowUp[i]['function'] === funcName &&
         variableShowUp[i]['name'] === varName
       ) {
+        variableShowUp[i]['color'] = color;
         break;
       }
     }
-    variablesHighlight[inArray(variableShowUp[i], variablesHighlight)][
-      'color'
-    ] = color;
-    variableShowUp[i]['color'] = color;
+    for (let j = 0; j < variablesHighlight.length; j++) {
+      if (
+        variablesHighlight[j]['function'] === funcName &&
+        variablesHighlight[j]['name'] === varName
+      ) {
+        variablesHighlight[j]['color'] = color;
+        break;
+      }
+    }
+    console.log(variablesHighlight, variableShowUp);
+    this.setState({
+      variablesHighlight: variablesHighlight,
+      variableShowUp: variableShowUp,
+    });
+  };
+
+  changeVariableVisible = (funcName: string, varName: string) => {
+    const { variablesHighlight, variableShowUp } = this.state;
+    for (let i = 0; i < variableShowUp.length; i++) {
+      if (
+        variableShowUp[i]['function'] === funcName &&
+        variableShowUp[i]['name'] === varName
+      ) {
+        variableShowUp[i]['visible'] = !variableShowUp[i]['visible'];
+        break;
+      }
+    }
     this.setState({
       variablesHighlight: variablesHighlight,
       variableShowUp: variableShowUp,
@@ -160,16 +240,19 @@ export default class KeyframeContent extends React.Component<Props, State> {
 
   render() {
     return (
-      <MDBContainer>
+      <>
         <MDBRow>
-          <MDBCol size="8">
-            <div style={{ padding: 30 }}>
+          <MDBCol size="1">
+            <ControlPanel debugState={this.state.debugState}></ControlPanel>
+          </MDBCol>
+          <MDBCol size="7">
+            <div style={{ padding: 30, height: 160 }}>
               <Slider
                 step={this.state.step}
                 max={this.state.max}
                 scale={this.state.scale}
-                width={500}
-                height={50}
+                width={600}
+                height={100}
                 selectedColor="#0074D9"
                 unselectedColor="#DDDDDD"
                 variablesHighlight={this.state.variablesHighlight}
@@ -181,6 +264,7 @@ export default class KeyframeContent extends React.Component<Props, State> {
             <StatementsHighlightContent
               changeStatementColor={this.changeStatementColor}
               statementsHighlight={this.state.statementsHighlight}
+              changeStatementVisible={this.changeStatementVisible}
             />
           </MDBCol>
           <MDBCol size="2">
@@ -188,10 +272,13 @@ export default class KeyframeContent extends React.Component<Props, State> {
               variablesHighlight={this.state.variablesHighlight}
               options={this.state.options}
               addVariableHighlight={this.addVariableHighlight}
+              changeVariableColor={this.changeVariableColor}
+              changeVariableVisible={this.changeVariableVisible}
+              removeVariableHighlight={this.removeVariableHighlight}
             />
           </MDBCol>
         </MDBRow>
-      </MDBContainer>
+      </>
     );
   }
 }

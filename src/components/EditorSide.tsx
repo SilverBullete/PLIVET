@@ -29,9 +29,9 @@ export default class EditorSide extends React.Component<Props, State> {
   render() {
     return (
       <Row>
-        <Col lg={12} md={12} sm={12} xs={12}>
+        {/* <Col lg={12} md={12} sm={12} xs={12}>
           <Menu lang={this.props.lang} />
-        </Col>
+        </Col> */}
         <Col lg={12} md={12} sm={12} xs={12}>
           <ContainerDimensions>
             {({ width, height }: { width: number; height: number }) => (

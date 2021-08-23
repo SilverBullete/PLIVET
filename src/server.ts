@@ -237,8 +237,8 @@ class Server {
       }
       let lastExpr = null;
       if (this.count > 0) {
-        lastExpr = this.stateHistory[this.count - 1];
-        const nextClassName = lastExpr.getNextExpr().constructor.name;
+        lastExpr = this.stateHistory[this.count - 1].getNextExpr();
+        const nextClassName = lastExpr.constructor.name;
         if (nextClassName === 'UniBinOp' && currentClassName !== 'UniBinOp') {
           const res = this.binOp(lastExpr);
           if (res) {
@@ -273,7 +273,10 @@ class Server {
 
       ret = this.Step(sourcecode);
     }
-    const step = this.count;
+
+    console.log(this.stateHistory);
+
+    const step = this.count + 1;
     this.isExecuting = true;
     const res = this.BackAll(sourcecode);
     res.stepCount = step;

@@ -2,13 +2,16 @@ import * as React from 'react';
 import ColorPicker from 'rc-color-picker';
 import PerfectScrollbar from 'react-perfect-scrollbar';
 import { Cascader, Button } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { PlusOutlined, CloseOutlined } from '@ant-design/icons';
 import { MDBCard, MDBCardBody, MDBRow, MDBCol } from 'mdb-react-ui-kit';
 
 interface Props {
   variablesHighlight: any;
   options: any;
   addVariableHighlight: any;
+  changeVariableColor: any;
+  changeVariableVisible: any;
+  removeVariableHighlight: any;
 }
 
 interface State {
@@ -29,7 +32,14 @@ export default class VariablesHighlightContent extends React.Component<
   }
 
   render() {
-    const { variablesHighlight, options, addVariableHighlight } = this.props;
+    const {
+      variablesHighlight,
+      options,
+      addVariableHighlight,
+      changeVariableColor,
+      changeVariableVisible,
+      removeVariableHighlight,
+    } = this.props;
     return (
       <div>
         <h4>Highlight Variables</h4>
@@ -53,8 +63,18 @@ export default class VariablesHighlightContent extends React.Component<
           </MDBCol>
         </MDBRow>
         <PerfectScrollbar>
-          <div style={{ height: 68 }}>
+          <div style={{ height: 108 }}>
             {variablesHighlight.map((m, i) => {
+              function changeHandler(color) {
+                changeVariableColor(m['function'], m['name'], color.color);
+              }
+              function changeVisible() {
+                changeVariableVisible(m['function'], m['name']);
+              }
+              function removeHandler() {
+                removeVariableHighlight(m['function'], m['name']);
+              }
+
               return (
                 <MDBCard
                   style={{
@@ -63,16 +83,30 @@ export default class VariablesHighlightContent extends React.Component<
                     width: '90%',
                     left: '5%',
                   }}
+                  border={m['visible'] ? 'info' : ''}
                 >
                   <MDBCardBody style={{ padding: 5 }}>
                     <MDBRow>
-                      <MDBCol size="8">
+                      <MDBCol size="8" onClick={changeVisible}>
                         <span>{m['function']}</span>
                         <span>: </span>
                         <span>{m['name']}</span>
                       </MDBCol>
-                      <MDBCol size="4">
-                        <ColorPicker color={m['color']} />
+                      <MDBCol size="2">
+                        <ColorPicker
+                          color={m['color']}
+                          onChange={changeHandler}
+                        />
+                      </MDBCol>
+                      <MDBCol size="1">
+                        <Button
+                          type="primary"
+                          shape="circle"
+                          icon={<CloseOutlined />}
+                          size="small"
+                          style={{ height: 18, width: 18, minWidth: 18 }}
+                          onClick={removeHandler}
+                        />
                       </MDBCol>
                     </MDBRow>
                   </MDBCardBody>

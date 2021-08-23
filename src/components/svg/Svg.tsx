@@ -48,10 +48,10 @@ export default class Svg extends React.Component<Props, State> {
             <MDBCardHeader style={{ fontSize: 15 }}>
               Calling Stack
             </MDBCardHeader>
-            <MDBCardBody style={{ height: 0.7 * this.props.height }}>
+            <MDBCardBody style={{ height: 0.99 * this.props.height - 290 }}>
               <svg
                 width={0.65 * this.props.width}
-                height={0.68 * this.props.height}
+                height={0.99 * this.props.height - 310}
                 id="svg"
               >
                 {/* <BlockContent
@@ -67,11 +67,11 @@ export default class Svg extends React.Component<Props, State> {
               Memory Allocation
             </MDBCardHeader>
             <PerfectScrollbar>
-              <MDBCardBody style={{ height: 0.7 * this.props.height }}>
+              <MDBCardBody style={{ height: 0.99 * this.props.height - 290 }}>
                 <svg
                   id="memory"
                   width={0.28 * this.props.width}
-                  height={0.68 * this.props.height}
+                  height={0.99 * this.props.height - 310}
                 >
                   <Memory
                     memoryDrawer={new MemoryDrawer(this.state.execState)}
