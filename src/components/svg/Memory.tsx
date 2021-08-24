@@ -67,7 +67,7 @@ export default class Memory extends React.Component<Props, State> {
             </text>
             <text
               x={cell.x() + width - 5}
-              y={y}
+              y={cell.getHeight() > 20 ? cell.y() + 35 : cell.y() + 15}
               fontSize="15"
               textAnchor="end"
               className="memory-value"
@@ -83,9 +83,9 @@ export default class Memory extends React.Component<Props, State> {
             {key.split('.')[0]}
           </text>
           <line
-            x1="10"
+            x1="5"
             y1={startY - 7}
-            x2="10"
+            x2="5"
             y2={y + 5}
             style={{ stroke: 'black', strokeWidth: '2px' }}
           />
@@ -103,11 +103,90 @@ export default class Memory extends React.Component<Props, State> {
     );
   }
 
+  renderHeap() {
+    const { memoryDrawer } = this.props;
+    const svgHeapTable = memoryDrawer.getSvgHeapTable();
+    const width = memoryDrawer.getWidth();
+    const originX = memoryDrawer.x();
+    const originY = memoryDrawer.y();
+    const offsetX = memoryDrawer.getOffsetX();
+    const offsetY = memoryDrawer.getOffsetY();
+    const list: JSX.Element[] = [];
+    let x = (originX + offsetX) * 1.5 + width * 1.2;
+    let startY = 0;
+    let name = '';
+    Object.keys(svgHeapTable).forEach((key) => {
+      if (svgHeapTable[key].length > 0) {
+        switch (key) {
+          case 'global':
+            name = 'Global/Static';
+            break;
+          case 'heap':
+            name = 'Heap';
+            break;
+          case 'const':
+            name = 'Const';
+            break;
+        }
+        const variables: JSX.Element[] = [];
+        svgHeapTable[key].forEach((cell, i) => {
+          if (i === 0) {
+            startY = cell.y();
+          }
+          variables.push(
+            <g>
+              <rect
+                x={cell.x()}
+                y={cell.y()}
+                width={width}
+                height={cell.getHeight()}
+                fill="white"
+                style={{ stroke: 'black', strokeWidth: '1.5px' }}
+              />
+              <text x={cell.x() + 10} y={cell.y() + 15} fontSize="15">
+                {cell.getType()}
+              </text>
+              <text
+                x={cell.x() - 3}
+                y={cell.y() + cell.getHeight() / 2}
+                fontSize="15"
+                textAnchor="end"
+                className="memory-name"
+              >
+                {cell.getName()}
+              </text>
+              <text
+                x={cell.x() + width - 5}
+                y={cell.getHeight() > 20 ? cell.y() + 35 : cell.y() + 15}
+                fontSize="15"
+                textAnchor="end"
+                className="memory-value"
+              >
+                {cell.getValue()}
+              </text>
+            </g>
+          );
+        });
+        list.push(
+          <React.Fragment>
+            <text x={x} y={startY - 25} fontSize="20">
+              {name}
+            </text>
+            {variables}
+          </React.Fragment>
+        );
+      }
+    });
+    return list;
+  }
+
   render() {
     const stack = this.renderStack();
+    const heap = this.renderHeap();
     return (
       <React.Fragment>
         <g>{stack}</g>
+        <g>{heap}</g>
       </React.Fragment>
     );
   }

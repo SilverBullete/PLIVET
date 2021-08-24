@@ -28,10 +28,11 @@ function str_pad(hex) {
 
 export class MemoryDrawer {
   private svgStackTable: any = {};
+  private svgHeapTable: any = { heap: [], global: [], const: [] };
   private execState: ExecState | null = null;
   private width: number = 120;
   private getTypedef: (type: string) => string;
-  private originX = 20;
+  private originX = 15;
   private originY = 20;
   private offsetX = 60;
   private offsetY = 25;
@@ -44,6 +45,7 @@ export class MemoryDrawer {
     this.execState = execState;
     this.update();
     this.calc();
+    console.log(this.svgHeapTable);
   }
 
   private update() {
@@ -53,20 +55,51 @@ export class MemoryDrawer {
     const stacks = this.execState.getStacks();
     stacks.forEach((stack, i) => {
       if (stack.name !== 'GLOBAL') {
-        const svgMemory = new SvgMemory(stack, this.getTypedef, colors[i - 1]);
+        const svgMemory = new SvgMemory(stack, this.getTypedef);
         this.svgStackTable[stack.name] = svgMemory.getSvgMemoryTable();
+      } else {
+        const variables = stack.getVariables();
+        variables.forEach((variable) => {
+          if (variable.address >= 50000) {
+            const value = variable.getValue();
+            const isArrayVariable = Array.isArray(value);
+            const svgMemoryVariable = isArrayVariable
+              ? new SvgMemoryArrayVariable(variable, 'global')
+              : new SvgMemoryVariable(variable, 'global');
+            const cellss = svgMemoryVariable.getSvgMemoryTable();
+            this.svgHeapTable['global'].push(...cellss);
+          } else if (variable.address >= 20000) {
+            const value = variable.getValue();
+            const isArrayVariable = Array.isArray(value);
+            const svgMemoryVariable = isArrayVariable
+              ? new SvgMemoryArrayVariable(variable, 'heap')
+              : new SvgMemoryVariable(variable, 'heap');
+            const cellss = svgMemoryVariable.getSvgMemoryTable();
+            this.svgHeapTable['heap'].push(...cellss);
+          }
+        });
       }
     });
   }
 
   private calc() {
     let y = this.originY;
-    Object.keys(this.svgStackTable).forEach((key, idx) => {
+    Object.keys(this.svgStackTable).forEach((key) => {
       y += this.offsetY;
-      this.svgStackTable[key].forEach((cell, i) => {
+      this.svgStackTable[key].forEach((cell) => {
         cell.setPos(this.originX + this.offsetX, y);
         y += cell.getHeight();
       });
+    });
+    y = this.originY;
+    Object.keys(this.svgHeapTable).forEach((key) => {
+      if (this.svgHeapTable[key].length > 0) {
+        y += this.offsetY * 2;
+        this.svgHeapTable[key].forEach((cell) => {
+          cell.setPos((this.originX + this.offsetX) * 2 + this.width, y);
+          y += cell.getHeight();
+        });
+      }
     });
   }
 
@@ -76,6 +109,10 @@ export class MemoryDrawer {
 
   public getSvgStackTable() {
     return this.svgStackTable;
+  }
+
+  public getSvgHeapTable() {
+    return this.svgHeapTable;
   }
 
   public x() {
@@ -100,8 +137,7 @@ export class SvgMemory {
 
   constructor(
     private readonly stack: Stack,
-    private readonly getTypedef: (type: string) => string,
-    private readonly color: string
+    private readonly getTypedef: (type: string) => string
   ) {
     this.svgMemoryTable = this.makeSvgMemoryTable();
   }
@@ -110,13 +146,12 @@ export class SvgMemory {
     const svgMemoryTable: any = [];
     const variables = this.stack.getVariables();
     const stackName = this.stack.name;
-    const color = this.color;
     for (const variable of variables) {
       const value = variable.getValue();
       const isArrayVariable = Array.isArray(value);
       const svgMemoryVariable = isArrayVariable
-        ? new SvgMemoryArrayVariable(variable, stackName, color)
-        : new SvgMemoryVariable(variable, stackName, color);
+        ? new SvgMemoryArrayVariable(variable, stackName)
+        : new SvgMemoryVariable(variable, stackName);
       const cellss = svgMemoryVariable.getSvgMemoryTable();
       svgMemoryTable.push(...cellss);
     }
@@ -133,8 +168,7 @@ export class SvgMemoryVariable {
   protected svgMemoryTable: any = [];
   constructor(
     protected readonly variable: Variable,
-    protected readonly stackName: string,
-    protected readonly color: string
+    protected readonly stackName: string
   ) {
     this.key = `${this.stackName}-${variable.name}`;
     this.key = this.key.replace(/[&\|\\\*:^%$@()\[\]]/g, '');
@@ -144,7 +178,6 @@ export class SvgMemoryVariable {
   protected init(variable: Variable) {
     const { type, name, address } = variable;
     const cell = this.pushCell(name);
-    cell.setColor(this.color);
     cell.setAddress(address);
     cell.setType(type);
     cell.setValue(variable.getValue());
@@ -163,14 +196,13 @@ export class SvgMemoryVariable {
 }
 
 export class SvgMemoryArrayVariable extends SvgMemoryVariable {
-  constructor(variable: Variable, stackName: string, color: string) {
-    super(variable, stackName, color);
+  constructor(variable: Variable, stackName: string) {
+    super(variable, stackName);
   }
 
   protected init(variable: Variable) {
     const { type, name, address } = variable;
     const cell = this.pushCell(name);
-    cell.setColor(this.color);
     cell.setAddress(address);
     cell.setType(type);
     cell.setValue(variable.getValue());
@@ -182,8 +214,8 @@ export class SvgMemoryArrayVariable extends SvgMemoryVariable {
     const value: Variable[] = this.variable.getValue();
     for (const v of value) {
       const svgMemoryVariable = Array.isArray(v.getValue())
-        ? new SvgMemoryArrayVariable(v, this.stackName, this.color)
-        : new SvgMemoryVariable(v, this.stackName, this.color);
+        ? new SvgMemoryArrayVariable(v, this.stackName)
+        : new SvgMemoryVariable(v, this.stackName);
       const table = svgMemoryVariable.getSvgMemoryTable();
       children.push(...table);
     }
