@@ -12,6 +12,7 @@ import {
 
 import { DEBUG_STATE } from '../../server';
 import { signal } from '../emitter';
+import * as d3 from 'd3';
 
 interface Props {
   debugState: DEBUG_STATE;
@@ -107,6 +108,16 @@ export default class ControlPanel extends React.Component<Props, State> {
             icon={<RedoOutlined />}
             onClick={() => {
               signal('debug', 'Start');
+              const arrowListJson = sessionStorage.getItem('arrowList');
+              let arrowList = JSON.parse(arrowListJson);
+              if (!arrowList) {
+                arrowList = {};
+              }
+              Object.keys(arrowList).forEach((name) => {
+                d3.select('#svg')
+                  .select(`#block_${name}`)
+                  .attr('transform', 'matrix(1,0,0,1,0,0)');
+              });
               sessionStorage.clear();
             }}
             disabled={!this.state.Start}
