@@ -105,7 +105,10 @@ export default class ControlPanel extends React.Component<Props, State> {
         <MDBBtnGroup vertical aria-label="Vertical button group">
           <Button
             icon={<RedoOutlined />}
-            onClick={() => signal('debug', 'Start')}
+            onClick={() => {
+              signal('debug', 'Start');
+              sessionStorage.clear();
+            }}
             disabled={!this.state.Start}
           ></Button>
           {/* <Button

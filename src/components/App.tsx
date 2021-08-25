@@ -16,6 +16,7 @@ interface State {}
 export default class App extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
+    sessionStorage.clear();
   }
   render() {
     const { lang, progLang, theme } = this.props;

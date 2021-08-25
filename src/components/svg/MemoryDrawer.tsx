@@ -45,7 +45,6 @@ export class MemoryDrawer {
     this.execState = execState;
     this.update();
     this.calc();
-    console.log(this.svgHeapTable);
   }
 
   private update() {

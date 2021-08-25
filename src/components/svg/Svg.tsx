@@ -54,9 +54,9 @@ export default class Svg extends React.Component<Props, State> {
                 height={0.99 * this.props.height - 310}
                 id="svg"
               >
-                {/* <BlockContent
+                <BlockContent
                   blockDrawer={new BlockDrawer(this.state.execState)}
-                ></BlockContent> */}
+                ></BlockContent>
               </svg>
             </MDBCardBody>
           </MDBCard>

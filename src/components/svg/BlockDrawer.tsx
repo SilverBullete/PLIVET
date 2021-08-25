@@ -69,7 +69,7 @@ export function valueToArray(value, type) {
 
 export class BlockDrawer {
   private blockStacks: BlockStack[] = [];
-  private blockArrows: BlockArrow[] = [];
+  private blockArrows: any = [null, null];
   private execState: ExecState | null = null;
   constructor(execState?: ExecState) {
     if (typeof execState === 'undefined') return;
@@ -88,23 +88,27 @@ export class BlockDrawer {
     stacks.forEach((stack, i) => {
       if (stack.name !== 'GLOBAL') {
         const blockStack = new BlockStack(stack);
-        blockStack.setColor(colors[i - 1]);
+        blockStack.setColor('black');
         this.blockStacks.push(blockStack);
       }
     });
   }
 
   private calcPos() {
-    const originX = 10;
+    const originX = 300;
     const originY = 5;
     const offsetX = 40;
     const offsetY = 40;
-    let index = 0;
-    this.blockStacks.forEach((blockStack) => {
-      const x = originX + offsetX * index;
-      const y = originY + offsetY * index;
-      this.calcStackPos(x, y, blockStack);
-      ++index;
+    let x = originX;
+    let y = originY;
+    this.blockStacks.slice(-2).forEach((blockStack, index) => {
+      this.blockArrows[index] = blockStack.getName();
+      const height = this.calcStackPos(x, y, blockStack);
+      y += height + offsetY;
+    });
+
+    this.blockStacks.slice(0, -2).forEach((blockStack, index) => {
+      this.calcStackPos(0, 0, blockStack);
     });
   }
 
@@ -118,9 +122,8 @@ export class BlockDrawer {
     let count = 0;
     const blockTable = blockStack.getBlockTable();
     blockTable.forEach((blockCellContainer) => {
-      // const len = Math.max(getCellsByDepth(blockCellContainer, 1).length, 1);
       const len = 1;
-      if (count + len > 3) {
+      if (count + len > 2) {
         row++;
         count = 0;
       }
@@ -130,8 +133,10 @@ export class BlockDrawer {
       this.calcVariablePos(_x, _y, blockCellContainer);
       count += len;
     });
-    blockStack.setHeight((BlockCell.HEIGHT + offsetY) * row + offsetY * 3);
-    blockStack.setWidth((BlockCell.WIDTH + offsetX) * 3 + offsetX * 2);
+    blockStack.setHeight((BlockCell.HEIGHT + offsetY) * row + offsetY * 2);
+    blockStack.setWidth((BlockCell.WIDTH + offsetX) * 2 + offsetX * 3);
+
+    return (BlockCell.HEIGHT + offsetY) * row + offsetY * 2;
   }
 
   private calcVariablePos(
@@ -169,8 +174,16 @@ export class BlockDrawer {
     return this.blockStacks;
   }
 
+  public getBlockArrows() {
+    return this.blockArrows;
+  }
+
   public addBlockStack(blockStack) {
     this.blockStacks.push(blockStack);
+  }
+
+  public addArrow(stackName) {
+    this.blockArrows.push(stackName);
   }
 }
 

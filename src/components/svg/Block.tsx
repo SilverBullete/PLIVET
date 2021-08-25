@@ -53,6 +53,8 @@ export default class Block extends React.Component<Props, State> {
           y={blockStack.y()}
           width={blockStack.getWidth()}
           height={blockStack.getHeight()}
+          rx={10}
+          ry={10}
           fill="white"
           style={{ stroke: blockStack.getColor(), strokeWidth: '1.5px' }}
         ></rect>
@@ -116,7 +118,11 @@ export default class Block extends React.Component<Props, State> {
     const backgroud = this.renderBlockBackground();
     const content = this.renderBlockContent();
     return (
-      <g id={this.props.blockStack.getName()}>
+      <g
+        className="block"
+        transform="matrix(1,0,0,1,0,0)"
+        id={`block_${this.props.blockStack.getName()}`}
+      >
         {backgroud}
         {content}
       </g>
