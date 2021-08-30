@@ -1,10 +1,11 @@
 import * as React from 'react';
-import { MemoryDrawer, SvgMemory } from './MemoryDrawer';
+import { MemoryDrawer, SvgMemory, str_pad } from './MemoryDrawer';
 import * as d3 from 'd3';
 import { wrapWord } from './Block';
 
 interface Props {
   memoryDrawer: MemoryDrawer;
+  memoryView: string;
 }
 
 interface State {
@@ -18,8 +19,39 @@ export default class Memory extends React.Component<Props, State> {
   }
 
   componentDidUpdate() {
-    wrapWord(d3.selectAll('.memory-value'), 55, 'memory-value');
+    wrapWord(d3.selectAll('.memory-value'), 120, 'memory-value');
     wrapWord(d3.selectAll('.memory-name'), 65, 'memory-name');
+    d3.select('#memory').attr(
+      'height',
+      d3.select('#memory').select('g').node().getBBox().height + 50
+    );
+  }
+
+  clickHandle(cell) {
+    const container = d3.select('#container');
+    container.select('div').remove();
+    const div = container.append('div');
+    div
+      .append('div')
+      .append('span')
+      .text(`Function Name: ${cell.getStackName().split('.')[0]}`);
+    div
+      .append('div')
+      .append('span')
+      .text(
+        `Depth: ${
+          cell.getStackName().split('.').length > 1
+            ? cell.getStackName().split('.')[1]
+            : 1
+        }`
+      );
+    div.append('div').append('span').text(`Variable Name: ${cell.getName()}`);
+    div
+      .append('div')
+      .append('span')
+      .text(`Address: ${str_pad(cell.getAddress().toString(16))}`);
+    div.append('div').append('span').text(`Type: ${cell.getType()}`);
+    div.append('div').append('span').text(`Value: ${cell.getValue()}`);
   }
 
   renderStack() {
@@ -153,7 +185,7 @@ export default class Memory extends React.Component<Props, State> {
                 textAnchor="end"
                 className="memory-name"
               >
-                {cell.getName()}
+                {name === 'Heap' ? '' : cell.getName()}
               </text>
               <text
                 x={cell.x() + width - 5}
@@ -180,14 +212,97 @@ export default class Memory extends React.Component<Props, State> {
     return list;
   }
 
+  renderPhysicalView() {
+    const { memoryDrawer } = this.props;
+    const physicalTable = memoryDrawer.getPhysicalTable();
+    const originX = 70;
+    const originY = 20;
+    const width = 120;
+    const offsetY = 40;
+    const list: JSX.Element[] = [];
+    physicalTable['data'].forEach((cell, i) => {
+      if (cell === '...') {
+        list.push(
+          <g>
+            <rect
+              x={originX}
+              y={originY + offsetY * i}
+              width={width}
+              height={offsetY}
+              fill="white"
+              style={{ stroke: 'black', strokeWidth: '1.5px' }}
+            />
+            <text
+              x={originX + width / 2}
+              y={originY + offsetY * i + offsetY / 2}
+              fontSize="20"
+              textAnchor="middle"
+            >
+              ...
+            </text>
+          </g>
+        );
+      } else {
+        list.push(
+          <g>
+            <rect
+              x={originX}
+              y={originY + offsetY * i}
+              width={width}
+              height={offsetY}
+              fill="white"
+              style={{ stroke: 'black', strokeWidth: '1.5px' }}
+              onClick={() => {
+                this.clickHandle(cell);
+              }}
+            />
+            <text x={originX + 10} y={originY + offsetY * i + 15} fontSize="15">
+              {cell.getType()}
+            </text>
+            <text
+              x={originX - 3}
+              y={originY + offsetY * i + offsetY / 2}
+              fontSize="15"
+              textAnchor="end"
+              className="memory-name"
+            >
+              {cell.getName()}
+            </text>
+            <text
+              x={originX + width - 5}
+              y={originY + offsetY * i + 35}
+              fontSize="15"
+              textAnchor="end"
+              className="memory-value"
+            >
+              {cell.getValue()}
+            </text>
+          </g>
+        );
+      }
+    });
+    return list;
+  }
+
   render() {
     const stack = this.renderStack();
     const heap = this.renderHeap();
-    return (
-      <React.Fragment>
-        <g>{stack}</g>
-        <g>{heap}</g>
-      </React.Fragment>
-    );
+    const physical = this.renderPhysicalView();
+    if (this.props.memoryView === 'logical') {
+      return (
+        <g>
+          <g>{stack}</g>
+          <g>{heap}</g>
+        </g>
+      );
+    } else if (this.props.memoryView === 'physical') {
+      return (
+        <g>
+          <g>{physical}</g>
+        </g>
+      );
+    } else {
+      return <g></g>;
+    }
   }
 }

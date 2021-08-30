@@ -8,6 +8,7 @@ import ContainerDimensions from 'react-container-dimensions';
 import Editor from './Editor';
 import Console from './Console';
 import FileForm from './FileForm';
+import { PageHeader } from 'antd';
 
 type Props = LangProps & ProgLangProps;
 
@@ -29,9 +30,7 @@ export default class EditorSide extends React.Component<Props, State> {
   render() {
     return (
       <Row>
-        {/* <Col lg={12} md={12} sm={12} xs={12}>
-          <Menu lang={this.props.lang} />
-        </Col> */}
+        <PageHeader className="site-page-header" title="Civis" />
         <Col lg={12} md={12} sm={12} xs={12}>
           <ContainerDimensions>
             {({ width, height }: { width: number; height: number }) => (

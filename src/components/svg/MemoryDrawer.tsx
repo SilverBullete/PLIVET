@@ -20,7 +20,7 @@ function getWidth(str: string, fontSize: number) {
   return res;
 }
 
-function str_pad(hex) {
+export function str_pad(hex) {
   let zero = '0000';
   let tmp = 4 - hex.length;
   return '0x' + zero.substr(0, tmp) + hex;
@@ -29,9 +29,9 @@ function str_pad(hex) {
 export class MemoryDrawer {
   private svgStackTable: any = {};
   private svgHeapTable: any = { heap: [], global: [], const: [] };
+  private physicalTable: any = { data: [] };
   private execState: ExecState | null = null;
   private width: number = 120;
-  private getTypedef: (type: string) => string;
   private originX = 15;
   private originY = 20;
   private offsetX = 60;
@@ -39,12 +39,12 @@ export class MemoryDrawer {
 
   constructor(execState?: ExecState) {
     if (typeof execState === 'undefined') {
-      this.getTypedef = (type: string) => type;
       return;
     }
     this.execState = execState;
     this.update();
     this.calc();
+    this.makePhysicalTable();
   }
 
   private update() {
@@ -54,7 +54,7 @@ export class MemoryDrawer {
     const stacks = this.execState.getStacks();
     stacks.forEach((stack, i) => {
       if (stack.name !== 'GLOBAL') {
-        const svgMemory = new SvgMemory(stack, this.getTypedef);
+        const svgMemory = new SvgMemory(stack);
         this.svgStackTable[stack.name] = svgMemory.getSvgMemoryTable();
       } else {
         const variables = stack.getVariables();
@@ -102,6 +102,47 @@ export class MemoryDrawer {
     });
   }
 
+  private makePhysicalTable() {
+    let minAddress = 9999999;
+    let maxAddress = 0;
+    let data = [];
+    let point = 0;
+    this.svgHeapTable['heap'].forEach((cell) => {
+      minAddress = Math.min(minAddress, cell.getAddress());
+      maxAddress = Math.max(maxAddress, cell.getAddress());
+      if (cell.getAddress() - point > 3) {
+        data.push('...');
+      }
+      cell.setName('');
+      data.push(cell);
+      point = cell.getAddress() + typeToHeight(cell.getType()) - 1;
+    });
+    this.svgHeapTable['global'].forEach((cell) => {
+      minAddress = Math.min(minAddress, cell.getAddress());
+      maxAddress = Math.max(maxAddress, cell.getAddress());
+      if (cell.getAddress() - point > 3) {
+        data.push('...');
+      }
+      data.push(cell);
+      point = cell.getAddress() + typeToHeight(cell.getType()) - 1;
+    });
+    Object.keys(this.svgStackTable).forEach((key) => {
+      this.svgStackTable[key].forEach((cell) => {
+        minAddress = Math.min(minAddress, cell.getAddress());
+        maxAddress = Math.max(maxAddress, cell.getAddress());
+        if (cell.getAddress() - point > 3) {
+          data.push('...');
+        }
+        data.push(cell);
+        point = cell.getAddress() + typeToHeight(cell.getType()) - 1;
+      });
+    });
+    data.push('...');
+    this.physicalTable['minAddress'] = minAddress;
+    this.physicalTable['maxAddress'] = maxAddress;
+    this.physicalTable['data'] = data;
+  }
+
   public getWidth() {
     return this.width;
   }
@@ -112,6 +153,10 @@ export class MemoryDrawer {
 
   public getSvgHeapTable() {
     return this.svgHeapTable;
+  }
+
+  public getPhysicalTable() {
+    return this.physicalTable;
   }
 
   public x() {
@@ -134,10 +179,7 @@ export class MemoryDrawer {
 export class SvgMemory {
   private svgMemoryTable: any;
 
-  constructor(
-    private readonly stack: Stack,
-    private readonly getTypedef: (type: string) => string
-  ) {
+  constructor(private readonly stack: Stack) {
     this.svgMemoryTable = this.makeSvgMemoryTable();
   }
 
@@ -267,6 +309,10 @@ export class SvgMemoryCell {
     return this.pos.getY();
   }
 
+  public setName(name: string) {
+    this.name = name;
+  }
+
   public getName() {
     return this.name;
   }
@@ -296,11 +342,11 @@ export class SvgMemoryCell {
   }
 
   public setHeight(height: number) {
-    if (this.name.split('[').length > 1) {
-      this.height = 20;
-    } else {
-      this.height = 40;
-    }
+    // if (this.name.split('[').length > 1) {
+    //   this.height = 20;
+    // } else {
+    this.height = 40;
+    // }
   }
 
   public getValue() {
