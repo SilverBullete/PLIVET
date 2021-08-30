@@ -30,6 +30,8 @@ export class MemoryDrawer {
   private svgStackTable: any = {};
   private svgHeapTable: any = { heap: [], global: [], const: [] };
   private physicalTable: any = { data: [] };
+  private arrowList: any = [];
+  private variableDic: any = {};
   private execState: ExecState | null = null;
   private width: number = 120;
   private originX = 15;
@@ -45,6 +47,7 @@ export class MemoryDrawer {
     this.update();
     this.calc();
     this.makePhysicalTable();
+    this.makeArrowList();
   }
 
   private update() {
@@ -105,44 +108,64 @@ export class MemoryDrawer {
   }
 
   private makePhysicalTable() {
-    let minAddress = 9999999;
-    let maxAddress = 0;
     let data = [];
     let point = 0;
     this.svgHeapTable['heap'].forEach((cell) => {
-      minAddress = Math.min(minAddress, cell.getAddress());
-      maxAddress = Math.max(maxAddress, cell.getAddress());
       if (cell.getAddress() - point > 3) {
         data.push('...');
       }
-      cell.setName('');
       data.push(cell);
+      this.variableDic[cell.getAddress()] =
+        'heap-' + cell.getName().replace(/[&\|\\\*:^%$@()\[\].]/g, '_');
       point = cell.getAddress() + typeToHeight(cell.getType()) - 1;
     });
     this.svgHeapTable['global'].forEach((cell) => {
-      minAddress = Math.min(minAddress, cell.getAddress());
-      maxAddress = Math.max(maxAddress, cell.getAddress());
       if (cell.getAddress() - point > 3) {
         data.push('...');
       }
       data.push(cell);
+      this.variableDic[cell.getAddress()] =
+        'global-' + cell.getName().replace(/[&\|\\\*:^%$@()\[\].]/g, '_');
       point = cell.getAddress() + typeToHeight(cell.getType()) - 1;
     });
     Object.keys(this.svgStackTable).forEach((key) => {
       this.svgStackTable[key].forEach((cell) => {
-        minAddress = Math.min(minAddress, cell.getAddress());
-        maxAddress = Math.max(maxAddress, cell.getAddress());
         if (cell.getAddress() - point > 3) {
           data.push('...');
         }
         data.push(cell);
+        this.variableDic[cell.getAddress()] = (
+          cell.getStackName() +
+          '-' +
+          cell.getName()
+        ).replace(/[&\|\\\*:^%$@()\[\].]/g, '_');
         point = cell.getAddress() + typeToHeight(cell.getType()) - 1;
       });
     });
     data.push('...');
-    this.physicalTable['minAddress'] = minAddress;
-    this.physicalTable['maxAddress'] = maxAddress;
     this.physicalTable['data'] = data;
+  }
+
+  private makeArrowList() {
+    const arrowList = [];
+    const data = this.physicalTable['data'];
+    data.forEach((cell) => {
+      if (cell !== '...') {
+        if (
+          cell.getType().split('[').length > 1 ||
+          cell.getType().split('*').length > 1
+        ) {
+          arrowList.push({
+            from: (cell.getStackName() + '-' + cell.getName()).replace(
+              /[&\|\\\*:^%$@()\[\].]/g,
+              '_'
+            ),
+            to: this.variableDic[Number(cell.getValue())],
+          });
+        }
+      }
+    });
+    this.arrowList = arrowList;
   }
 
   public getWidth() {
@@ -159,6 +182,10 @@ export class MemoryDrawer {
 
   public getPhysicalTable() {
     return this.physicalTable;
+  }
+
+  public getArrowList() {
+    return this.arrowList;
   }
 
   public x() {

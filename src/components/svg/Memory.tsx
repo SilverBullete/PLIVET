@@ -50,6 +50,7 @@ export default class Memory extends React.Component<Props, State> {
       .select('#memory-left-' + activeStack);
     memoryLeftHighlight.select('text').attr('fill', '#0074D9');
     memoryLeftHighlight.select('line').style('stroke', '#0074D9');
+    this.renderArrow();
   }
 
   clickHandle(cell) {
@@ -105,6 +106,10 @@ export default class Memory extends React.Component<Props, State> {
             className={`memory-${
               cell.getStackName().split('.')[0]
             }-${cell.getName()}`}
+            id={`memory-${cell.getStackName()}-${cell.getName()}`.replace(
+              /[&\|\\\*:^%$@()\[\].]/g,
+              '_'
+            )}
           >
             <rect
               x={cell.x()}
@@ -199,6 +204,10 @@ export default class Memory extends React.Component<Props, State> {
               className={`memory-${
                 cell.getStackName().split('.')[0]
               }-${cell.getName()}`}
+              id={`memory-${cell.getStackName()}-${cell.getName()}`.replace(
+                /[&\|\\\*:^%$@()\[\].]/g,
+                '_'
+              )}
             >
               <rect
                 x={cell.x()}
@@ -281,6 +290,10 @@ export default class Memory extends React.Component<Props, State> {
             className={`memory-${
               cell.getStackName().split('.')[0]
             }-${cell.getName()}`}
+            id={`memory-${cell.getStackName()}-${cell.getName()}`.replace(
+              /[&\|\\\*:^%$@()\[\].]/g,
+              '_'
+            )}
           >
             <rect
               x={originX}
@@ -303,7 +316,7 @@ export default class Memory extends React.Component<Props, State> {
               textAnchor="end"
               className="memory-name"
             >
-              {cell.getName()}
+              {cell.getName().split(':').length > 1 ? '' : cell.getName()}
             </text>
             <text
               x={originX + width - 5}
@@ -319,6 +332,62 @@ export default class Memory extends React.Component<Props, State> {
       }
     });
     return list;
+  }
+
+  renderArrow() {
+    d3.select('#memory').select('#arrows').selectAll('path').remove();
+    const { memoryDrawer } = this.props;
+    const arrowList = memoryDrawer.getArrowList();
+    arrowList.forEach((arrow) => {
+      console.log(arrow);
+
+      if (arrow['from'] && arrow['to']) {
+        let source = d3
+          .select('#memory')
+          .select(`#memory-${arrow['from']}`)
+          .select('rect');
+        let target = d3
+          .select('#memory')
+          .select(`#memory-${arrow['to']}`)
+          .select('rect');
+        let sourceX = Number(source.attr('x')) + Number(source.attr('width'));
+        let sourceY =
+          Number(source.attr('y')) + 0.5 * Number(source.attr('height'));
+        let targetX = 0;
+        let targetY = 0;
+        if (Number(source.attr('x')) < Number(target.attr('x'))) {
+          targetX = Number(target.attr('x'));
+          targetY =
+            Number(target.attr('y')) + 0.5 * Number(target.attr('height'));
+        } else {
+          targetX = Number(target.attr('x')) + Number(target.attr('width'));
+          targetY =
+            Number(target.attr('y')) + 0.5 * Number(target.attr('height'));
+        }
+        let dx = targetX - sourceX;
+        let dy = targetY - sourceY;
+        let dr = Math.sqrt(dx * dx + dy * dy);
+        d3.select('#memory')
+          .select('#arrows')
+          .append('path')
+          .attr('style', 'stroke:#858585; fill:none; stroke-width:2;')
+          .attr(
+            'd',
+            'M' +
+              sourceX +
+              ',' +
+              sourceY +
+              'A' +
+              dr +
+              ',' +
+              dr +
+              ' 0 0,1 ' +
+              targetX +
+              ',' +
+              targetY
+          );
+      }
+    });
   }
 
   render() {

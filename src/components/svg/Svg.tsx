@@ -115,6 +115,7 @@ export default class Svg extends React.Component<Props, State> {
                     memoryDrawer={new MemoryDrawer(this.state.execState)}
                     memoryView={this.state.memoryView}
                   />
+                  <g id="arrows"></g>
                 </svg>
                 {/* <AnimationContent
                   animationDrawer={
