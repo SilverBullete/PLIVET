@@ -52,10 +52,12 @@ export class MemoryDrawer {
       return;
     }
     const stacks = this.execState.getStacks();
-    stacks.forEach((stack, i) => {
+    stacks.forEach((stack) => {
       if (stack.name !== 'GLOBAL') {
         const svgMemory = new SvgMemory(stack);
-        this.svgStackTable[stack.name] = svgMemory.getSvgMemoryTable();
+        this.svgStackTable[
+          stack.name.replace('.', '_')
+        ] = svgMemory.getSvgMemoryTable();
       } else {
         const variables = stack.getVariables();
         variables.forEach((variable) => {

@@ -25,6 +25,31 @@ export default class Memory extends React.Component<Props, State> {
       'height',
       d3.select('#memory').select('g').node().getBBox().height + 50
     );
+    const variablesMapJson = sessionStorage.getItem('variablesMap');
+    let variablesMap = JSON.parse(variablesMapJson);
+    if (!variablesMap) {
+      variablesMap = {};
+    }
+    Object.keys(variablesMap).forEach((key) => {
+      if (variablesMap[key]['visible']) {
+        const stackName = key.split('_')[0];
+        const name = key.split('_')[1];
+        const cells = d3
+          .select('#memory')
+          .selectAll(`.memory-${stackName}-${name}`);
+        cells.select('rect').style('stroke', variablesMap[key]['color']);
+        cells.selectAll('text').attr('fill', variablesMap[key]['color']);
+      }
+    });
+    const activeStack = sessionStorage.getItem('activeStack');
+    const memoryLeft = d3.select('#memory').selectAll('.memory-left');
+    memoryLeft.select('text').attr('fill', 'black');
+    memoryLeft.select('line').style('stroke', 'black');
+    const memoryLeftHighlight = d3
+      .select('#memory')
+      .select('#memory-left-' + activeStack);
+    memoryLeftHighlight.select('text').attr('fill', '#0074D9');
+    memoryLeftHighlight.select('line').style('stroke', '#0074D9');
   }
 
   clickHandle(cell) {
@@ -76,7 +101,11 @@ export default class Memory extends React.Component<Props, State> {
           y = cell.y() + 35;
         }
         variables.push(
-          <g>
+          <g
+            className={`memory-${
+              cell.getStackName().split('.')[0]
+            }-${cell.getName()}`}
+          >
             <rect
               x={cell.x()}
               y={cell.y()}
@@ -110,9 +139,9 @@ export default class Memory extends React.Component<Props, State> {
         );
       });
       list.push(
-        <React.Fragment>
+        <g id={'memory-left-' + key} className="memory-left">
           <text x={originX - 7} y={startY} fontSize="13">
-            {key.split('.')[0]}
+            {key.split('_')[0]}
           </text>
           <line
             x1="5"
@@ -122,7 +151,7 @@ export default class Memory extends React.Component<Props, State> {
             style={{ stroke: 'black', strokeWidth: '2px' }}
           />
           {variables}
-        </React.Fragment>
+        </g>
       );
     });
     return (
@@ -166,7 +195,11 @@ export default class Memory extends React.Component<Props, State> {
             startY = cell.y();
           }
           variables.push(
-            <g>
+            <g
+              className={`memory-${
+                cell.getStackName().split('.')[0]
+              }-${cell.getName()}`}
+            >
               <rect
                 x={cell.x()}
                 y={cell.y()}
@@ -244,7 +277,11 @@ export default class Memory extends React.Component<Props, State> {
         );
       } else {
         list.push(
-          <g>
+          <g
+            className={`memory-${
+              cell.getStackName().split('.')[0]
+            }-${cell.getName()}`}
+          >
             <rect
               x={originX}
               y={originY + offsetY * i}

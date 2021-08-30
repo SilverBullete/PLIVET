@@ -40,6 +40,14 @@ export default class VariablesHighlightContent extends React.Component<
       changeVariableVisible,
       removeVariableHighlight,
     } = this.props;
+    const variablesMap = {};
+    variablesHighlight.map((m) => {
+      variablesMap[`${m['function']}_${m['name']}`] = {
+        color: m['color'],
+        visible: m['visible'],
+      };
+    });
+    sessionStorage.setItem('variablesMap', JSON.stringify(variablesMap));
     return (
       <div>
         <h4>Highlight Variables</h4>

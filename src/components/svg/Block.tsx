@@ -65,7 +65,7 @@ export default class Block extends React.Component<Props, State> {
           fontWeight="bold"
           fill={blockStack.getColor()}
         >
-          {blockStack.key}
+          {blockStack.key.split('.')[0]}
         </text>
       </React.Fragment>
     );
@@ -80,7 +80,11 @@ export default class Block extends React.Component<Props, State> {
         if (i >= 3) break;
         const blockCell = blockCellContainer[i];
         list.push(
-          <g id={blockCell.key}>
+          <g
+            className={`block-${
+              blockStack.key.split('.')[0]
+            }-${blockCell.getName()}`}
+          >
             <text
               x={blockCell.x() + 5}
               y={blockCell.y() - 5}

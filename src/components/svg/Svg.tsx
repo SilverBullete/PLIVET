@@ -64,6 +64,7 @@ export default class Svg extends React.Component<Props, State> {
                 height={0.99 * this.props.height - 310}
                 id="svg"
               >
+                <g id="path"></g>
                 <BlockContent
                   blockDrawer={new BlockDrawer(this.state.execState)}
                 ></BlockContent>

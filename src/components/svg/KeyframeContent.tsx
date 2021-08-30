@@ -163,6 +163,16 @@ export default class KeyframeContent extends React.Component<Props, State> {
         variableShowUp: variableShowUp,
       });
     }
+    const memoryCells = d3
+      .select('#memory')
+      .selectAll(`.memory-${funcName}-${varName}`);
+    memoryCells.select('rect').style('stroke', color);
+    memoryCells.selectAll('text').attr('fill', color);
+    const blockCells = d3
+      .select('#svg')
+      .selectAll(`.block-${funcName}-${varName}`);
+    blockCells.select('rect').style('stroke', color);
+    blockCells.selectAll('text').attr('fill', color);
   };
 
   removeVariableHighlight = (funcName: string, varName: string) => {
@@ -187,6 +197,16 @@ export default class KeyframeContent extends React.Component<Props, State> {
         }
       }
     }
+    const memoryCells = d3
+      .select('#memory')
+      .selectAll(`.memory-${funcName}-${varName}`);
+    memoryCells.select('rect').style('stroke', 'black');
+    memoryCells.selectAll('text').attr('fill', 'black');
+    const blockCells = d3
+      .select('#svg')
+      .selectAll(`.block-${funcName}-${varName}`);
+    blockCells.select('rect').style('stroke', 'black');
+    blockCells.selectAll('text').attr('fill', 'black');
     this.setState({
       variablesHighlight: variablesHighlight,
       variableShowUp: variableShowUp,
@@ -214,7 +234,16 @@ export default class KeyframeContent extends React.Component<Props, State> {
         break;
       }
     }
-    console.log(variablesHighlight, variableShowUp);
+    const memoryCells = d3
+      .select('#memory')
+      .selectAll(`.memory-${funcName}-${varName}`);
+    memoryCells.select('rect').style('stroke', color);
+    memoryCells.selectAll('text').attr('fill', color);
+    const blockCells = d3
+      .select('#svg')
+      .selectAll(`.block-${funcName}-${varName}`);
+    blockCells.select('rect').style('stroke', color);
+    blockCells.selectAll('text').attr('fill', color);
     this.setState({
       variablesHighlight: variablesHighlight,
       variableShowUp: variableShowUp,
@@ -228,6 +257,33 @@ export default class KeyframeContent extends React.Component<Props, State> {
         variableShowUp[i]['function'] === funcName &&
         variableShowUp[i]['name'] === varName
       ) {
+        if (variableShowUp[i]['visible']) {
+          const memoryCells = d3
+            .select('#memory')
+            .selectAll(`.memory-${funcName}-${varName}`);
+          memoryCells.select('rect').style('stroke', 'black');
+          memoryCells.selectAll('text').attr('fill', 'black');
+          const blockCells = d3
+            .select('#svg')
+            .selectAll(`.block-${funcName}-${varName}`);
+          blockCells.select('rect').style('stroke', 'black');
+          blockCells.selectAll('text').attr('fill', 'black');
+        } else {
+          const memoryCells = d3
+            .select('#memory')
+            .selectAll(`.memory-${funcName}-${varName}`);
+          memoryCells
+            .select('rect')
+            .style('stroke', variableShowUp[i]['color']);
+          memoryCells
+            .selectAll('text')
+            .attr('fill', variableShowUp[i]['color']);
+          const blockCells = d3
+            .select('#svg')
+            .selectAll(`.block-${funcName}-${varName}`);
+          blockCells.select('rect').style('stroke', variableShowUp[i]['color']);
+          blockCells.selectAll('text').attr('fill', variableShowUp[i]['color']);
+        }
         variableShowUp[i]['visible'] = !variableShowUp[i]['visible'];
         break;
       }

@@ -30,8 +30,8 @@ function dragged(d: any) {
 function renderArrow(stackName) {
   let source = d3.select('#svg').select(`#stack_${stackName}`);
   let target = d3.select('#svg').select(`#block_${stackName}`);
-  let sourceX = Number(source.attr('x')) + 0.73 * Number(source.attr('width'));
-  let sourceY = Number(source.attr('y')) + 0.5 * Number(source.attr('height'));
+  let sourceX = Number(source.attr('x')) + 0.8 * Number(source.attr('width'));
+  let sourceY = Number(source.attr('y')) + 0.2 * Number(source.attr('height'));
   let transform = target.attr('transform').replace(')', '').split(',');
   target = target.select('rect');
   let targetX = Number(target.attr('x')) + Number(transform[4]);
@@ -39,6 +39,7 @@ function renderArrow(stackName) {
   let temp = sourceX - targetX;
   temp = Math.max(temp, -temp);
   d3.select('#svg')
+    .select('#path')
     .append('path')
     .attr('style', 'stroke:#858585; fill:none; stroke-width:2;')
     .attr('id', `arrow_${stackName}`)
@@ -129,6 +130,29 @@ export default class BlockContent extends React.Component<Props, State> {
         renderArrow(stackName);
       }
     });
+    const variablesMapJson = sessionStorage.getItem('variablesMap');
+    let variablesMap = JSON.parse(variablesMapJson);
+    if (!variablesMap) {
+      variablesMap = {};
+    }
+    Object.keys(variablesMap).forEach((key) => {
+      if (variablesMap[key]['visible']) {
+        const stackName = key.split('_')[0];
+        const name = key.split('_')[1];
+        const cells = d3
+          .select('#svg')
+          .selectAll(`.block-${stackName}-${name}`);
+        cells.select('rect').style('stroke', variablesMap[key]['color']);
+        cells.selectAll('text').attr('fill', variablesMap[key]['color']);
+      }
+    });
+    const activeStack = sessionStorage.getItem('activeStack');
+    const blocks = d3.select('#svg').selectAll('.block');
+    blocks.select('rect').style('stroke', 'black');
+    blocks.select('text').style('fill', 'black');
+    const block = d3.select('#svg').select('#block_' + activeStack);
+    block.select('rect').style('stroke', '#0074D9');
+    block.select('text').style('fill', '#0074D9');
   }
 
   renderBlocks() {
@@ -170,7 +194,6 @@ export default class BlockContent extends React.Component<Props, State> {
     }
     sessionStorage.setItem('arrowList', JSON.stringify(arrowList));
     this.setState({});
-    console.log(sessionStorage.getItem('arrowList'));
   }
 
   renderStackView() {
@@ -224,6 +247,13 @@ export default class BlockContent extends React.Component<Props, State> {
   render() {
     const stacks = this.renderStackView();
     const blocks = this.renderBlocks();
+    const { blockDrawer } = this.props;
+    const blockArrows = blockDrawer.getBlockArrows();
+    blockArrows.forEach((stackName) => {
+      if (stackName) {
+        sessionStorage.setItem('activeStack', stackName);
+      }
+    });
     return (
       <React.Fragment>
         {stacks}
