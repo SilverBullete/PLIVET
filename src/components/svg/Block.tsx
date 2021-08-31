@@ -84,6 +84,11 @@ export default class Block extends React.Component<Props, State> {
             className={`block-${
               blockStack.key.split('.')[0]
             }-${blockCell.getName()}`}
+            id={`block-${blockStack.key.replace(
+              '.',
+              '_'
+            )}-${blockCell.getName()}`}
+            transform="matrix(1,0,0,1,0,0)"
           >
             <text
               x={blockCell.x() + 5}

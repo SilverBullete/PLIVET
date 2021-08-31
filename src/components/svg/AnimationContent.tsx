@@ -42,38 +42,6 @@ export default class AnimationContent extends React.Component<Props, State> {
     console.log(addList);
 
     addList.forEach((item) => {
-      // d3.select('#' + item)
-      //   .attr('transform', 'matrix(1,0,0,1,0,400)')
-      //   .style('fill-opacity', 1)
-      //   .style('stroke-opacity', 1)
-      //   .style('display', 'inline');
-      // d3.select('#' + item)
-      //   .select('rect')
-      //   .style('stroke-dasharray', '10,15')
-      //   .transition()
-      //   .delay(2000)
-      //   .duration(2000)
-      //   .tween('number', function () {
-      //     let i = d3.interpolateArray([10, 25], [25, 0]);
-      //     return function (t) {
-      //       d3.select('#' + item)
-      //         .select('rect')
-      //         .style('stroke-dasharray', i(t)[0] + ',' + i(t)[1]);
-      //     };
-      //   });
-      // d3.select('#' + item)
-      //   .transition()
-      //   .delay(2000)
-      //   .duration(2000)
-      //   .tween('number', function () {
-      //     let i = d3.interpolateRound(400, 0);
-      //     return function (t) {
-      //       d3.select('#' + item).attr(
-      //         'transform',
-      //         'matrix(1,0,0,1,0,' + i(t) + ')'
-      //       );
-      //     };
-      //   });
       d3.select('#' + item)
         .style('display', 'inline')
         .style('fill-opacity', 1)
@@ -87,9 +55,9 @@ export default class AnimationContent extends React.Component<Props, State> {
       case 'programInit':
         this.programInit();
         break;
-      case 'uniReturn':
-        this.uniReturn();
-        break;
+      // case 'uniReturn':
+      //   this.uniReturn();
+      //   break;
       case 'methodCall':
         this.methodCall();
         break;
@@ -102,18 +70,11 @@ export default class AnimationContent extends React.Component<Props, State> {
   }
 
   programInit() {
-    d3.select('#main')
+    d3.select('#block_main')
       .style('fill-opacity', 1)
       .style('stroke-opacity', 1)
       .style('display', 'inline');
-    d3.select('#main').select('rect').style('stroke-dasharray', '0,25');
-    d3.select('#main')
-      .select('rect')
-      .transition()
-      .duration(2000)
-      .styleTween('stroke-dasharray', function () {
-        return d3.interpolateArray([0, 25], [25, 0]);
-      });
+    this.showUp('block_main');
   }
 
   variablesInit() {
@@ -126,17 +87,10 @@ export default class AnimationContent extends React.Component<Props, State> {
     }
     for (let i = 0; i < keys.length; i++) {
       const key = keys[i];
-      d3.select('#' + key)
-        .select('rect')
-        .style('stroke-dasharray', '0,25');
-      d3.select('#' + key)
-        .select('rect')
-        .transition()
-        .duration(2000)
-        .styleTween('stroke-dasharray', function () {
-          return d3.interpolateArray([0, 25], [25, 0]);
-        });
-      this.variableChange(key, types[i], values[i], 0, 0);
+      console.log(key);
+
+      this.showUp('block-' + key);
+      // this.variableChange(key, types[i], values[i], 0, 0);
     }
   }
 
@@ -148,83 +102,79 @@ export default class AnimationContent extends React.Component<Props, State> {
     const types = animationDrawer.getVariableTypes();
     const values = animationDrawer.getVariableValues();
 
-    d3.select('#' + stackName).attr('transform', 'matrix(1,0,0,1,0,250)');
-    d3.select('#' + stackName)
-      .select('rect')
-      .style('stroke-dasharray', '10,15')
+    this.showUp('block_' + stackName);
+    const stack = d3.select('#stack_' + stackName);
+    stack.attr('tansform', 'matrix(1,0,0,1,0,300)');
+    stack
       .transition()
-      .delay(2000)
-      .duration(2000)
+      .duration(1000)
       .tween('number', function () {
-        let i = d3.interpolateArray([10, 25], [25, 0]);
+        let i = d3.interpolateNumber(300, 0);
         return function (t) {
-          d3.select('#' + stackName)
-            .select('rect')
-            .style('stroke-dasharray', i(t)[0] + ',' + i(t)[1]);
+          stack.attr('transform', `matrix(1,0,0,1,0,${i(t)})`);
         };
       });
-    postArgs.forEach((arg, idx) => {
-      let source = 0;
-      if (arg === undefined) {
-        d3.select('#' + keys[idx])
-          .select('rect')
-          .style('stroke-dasharray', '0,25');
-        d3.select('#' + keys[idx])
-          .select('rect')
-          .transition()
-          .duration(2000)
-          .styleTween('stroke-dasharray', function () {
-            return d3.interpolateArray([0, 25], [25, 0]);
-          });
-      } else {
-        const cloned = d3
-          .select('#svg')
-          .appendClone(d3.select('#' + postArgs[idx]));
-        cloned.select('text').remove();
-        const target = d3.select('#' + keys[idx]);
-        target
-          .select('rect')
-          .style('display', 'none')
-          .transition()
-          .delay(1000)
-          .style('display', 'inline');
-        target
-          .selectAll('.value')
-          .style('display', 'none')
-          .transition()
-          .delay(1000)
-          .style('display', 'inline');
-        cloned
-          .select('rect')
-          .transition()
-          .duration(1000)
-          .attr('x', target.select('rect').attr('x'))
-          .attr('y', Number(target.select('rect').attr('y')) + 250);
-        cloned
-          .selectAll('.value')
-          .transition()
-          .duration(1000)
-          .attr('x', target.selectAll('.value').attr('x'))
-          .attr('y', Number(target.selectAll('.value').attr('y')) + 250);
-        cloned.transition().delay(1000).remove();
-        source = cloned.select('.value').text();
-      }
-      this.variableChange(keys[idx], types[idx], values[idx], source, 1000);
-    });
+    const arrow = d3.select('#arrow_' + stackName);
+    arrow.style('opacity', 0);
+    arrow
+      .transition()
+      .duration(500)
+      .delay(500)
+      .tween('number', function () {
+        let i = d3.interpolateNumber(0, 1);
+        return function (t) {
+          arrow.style('opacity', i(t));
+        };
+      });
 
-    d3.select('#' + stackName)
-      .transition()
-      .delay(2000)
-      .duration(2000)
-      .tween('number', function () {
-        let i = d3.interpolateRound(250, 0);
-        return function (t) {
-          d3.select('#' + stackName).attr(
-            'transform',
-            'matrix(1,0,0,1,0,' + i(t) + ')'
-          );
-        };
-      });
+    // postArgs.forEach((arg, idx) => {
+    //   let source = 0;
+    //   if (arg === undefined) {
+    //     d3.select('#' + keys[idx])
+    //       .select('rect')
+    //       .style('stroke-dasharray', '0,25');
+    //     d3.select('#' + keys[idx])
+    //       .select('rect')
+    //       .transition()
+    //       .duration(2000)
+    //       .styleTween('stroke-dasharray', function () {
+    //         return d3.interpolateArray([0, 25], [25, 0]);
+    //       });
+    //   } else {
+    //     const cloned = d3
+    //       .select('#svg')
+    //       .appendClone(d3.select('#' + postArgs[idx]));
+    //     cloned.select('text').remove();
+    //     const target = d3.select('#' + keys[idx]);
+    //     target
+    //       .select('rect')
+    //       .style('display', 'none')
+    //       .transition()
+    //       .delay(1000)
+    //       .style('display', 'inline');
+    //     target
+    //       .selectAll('.value')
+    //       .style('display', 'none')
+    //       .transition()
+    //       .delay(1000)
+    //       .style('display', 'inline');
+    //     cloned
+    //       .select('rect')
+    //       .transition()
+    //       .duration(1000)
+    //       .attr('x', target.select('rect').attr('x'))
+    //       .attr('y', Number(target.select('rect').attr('y')) + 250);
+    //     cloned
+    //       .selectAll('.value')
+    //       .transition()
+    //       .duration(1000)
+    //       .attr('x', target.selectAll('.value').attr('x'))
+    //       .attr('y', Number(target.selectAll('.value').attr('y')) + 250);
+    //     cloned.transition().delay(1000).remove();
+    //     source = cloned.select('.value').text();
+    //   }
+    //   this.variableChange(keys[idx], types[idx], values[idx], source, 1000);
+    // });
   }
 
   variableChange(key, type, value, source, delay) {
@@ -267,6 +217,39 @@ export default class AnimationContent extends React.Component<Props, State> {
         .attr('y', y)
         .style('fill-opacity', 1);
     }
+  }
+
+  showUp(id) {
+    const block = d3.select('#svg').select('#' + id);
+    const svg = d3.select('#svg');
+    const rect = block.select('rect');
+    const transform = block
+      .attr('transform')
+      .replace('matrix(', '')
+      .replace(')', '')
+      .split(',');
+    const transformOriginX =
+      (Number(transform[4]) + Number(rect.attr('x'))) /
+      Number(svg.attr('width'));
+    const transformOriginY =
+      (Number(transform[5]) + Number(rect.attr('y'))) /
+      Number(svg.attr('height'));
+    block.attr(
+      'transform-origin',
+      `${transformOriginX * 100}% ${transformOriginY * 100}%`
+    );
+    block
+      .transition()
+      .duration(1000)
+      .tween('number', function () {
+        let i = d3.interpolateNumber(0, 1);
+        return function (t) {
+          block.attr(
+            'transform',
+            `matrix(${i(t)},0,0,${i(t)},${transform[4]},${transform[5]})`
+          );
+        };
+      });
   }
 
   uniReturn() {

@@ -28,7 +28,7 @@ function dragged(d: any) {
 }
 
 function renderArrow(stackName) {
-  let source = d3.select('#svg').select(`#stack_${stackName}`);
+  let source = d3.select('#svg').select(`#stack_${stackName}`).select('rect');
   let target = d3.select('#svg').select(`#block_${stackName}`);
   let sourceX = Number(source.attr('x')) + 0.8 * Number(source.attr('width'));
   let sourceY = Number(source.attr('y')) + 0.2 * Number(source.attr('height'));
@@ -217,6 +217,7 @@ export default class BlockContent extends React.Component<Props, State> {
       let transform = `matrix(1,0,-0.36397,1,${transformX},0)`;
       list.push(
         <g
+          id={`stack_${blockStack.getName()}`}
           onClick={() => {
             const res = inArray(blockStack.getName(), blockArrows);
             if (res < 0) {
@@ -233,7 +234,6 @@ export default class BlockContent extends React.Component<Props, State> {
             fill="white"
             stroke="black"
             strokeWidth={2}
-            id={`stack_${blockStack.getName()}`}
           ></rect>
           <text x={x + 10} y={y + 20} fontSize="15">
             {blockStack.getName().split('_')[0]}

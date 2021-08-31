@@ -139,14 +139,14 @@ export default class Svg extends React.Component<Props, State> {
                     memoryView={this.state.memoryView}
                   />
                 </svg>
-                {/* <AnimationContent
+                <AnimationContent
                   animationDrawer={
                     new AnimationDrawer(
                       this.state.execState,
                       this.state.lastState
                     )
                   }
-                /> */}
+                />
               </MDBCardBody>
             </PerfectScrollbar>
           </MDBCard>
