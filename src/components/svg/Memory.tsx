@@ -23,7 +23,7 @@ export default class Memory extends React.Component<Props, State> {
     wrapWord(d3.selectAll('.memory-name'), 65, 'memory-name');
     d3.select('#memory').attr(
       'height',
-      d3.select('#memory').select('g').node().getBBox().height + 50
+      d3.select('#memory').select('.content').node().getBBox().height + 50
     );
     const variablesMapJson = sessionStorage.getItem('variablesMap');
     let variablesMap = JSON.parse(variablesMapJson);
@@ -356,36 +356,68 @@ export default class Memory extends React.Component<Props, State> {
         let targetX = 0;
         let targetY = 0;
         if (Number(source.attr('x')) < Number(target.attr('x'))) {
-          targetX = Number(target.attr('x'));
+          targetX = Number(target.attr('x')) - 6;
           targetY =
             Number(target.attr('y')) + 0.5 * Number(target.attr('height'));
+          let temp = targetX - sourceX;
+          d3.select('#memory')
+            .select('#arrows')
+            .append('path')
+            .attr('style', 'stroke:#858585; fill:none; stroke-width:2;')
+            .attr(
+              'd',
+              'M' +
+                sourceX +
+                ',' +
+                sourceY +
+                ' C' +
+                (targetX - temp / 3) +
+                ',' +
+                sourceY +
+                ' ' +
+                (sourceX + temp / 3) +
+                ',' +
+                targetY +
+                ' ' +
+                targetX +
+                ',' +
+                targetY
+            )
+            .attr('marker-end', 'url(#arrow)');
         } else {
-          targetX = Number(target.attr('x')) + Number(target.attr('width'));
+          targetX = Number(target.attr('x')) + Number(target.attr('width')) + 6;
           targetY =
             Number(target.attr('y')) + 0.5 * Number(target.attr('height'));
+          let dx = targetX - sourceX;
+          let dy = targetY - sourceY;
+          let dr = Math.sqrt(dx * dx + dy * dy);
+          let sweepFlag = 0;
+          if (dy > 0) {
+            sweepFlag = 1;
+          }
+          d3.select('#memory')
+            .select('#arrows')
+            .append('path')
+            .attr('style', 'stroke:#858585; fill:none; stroke-width:2;')
+            .attr(
+              'd',
+              'M' +
+                sourceX +
+                ',' +
+                sourceY +
+                'A' +
+                dr +
+                ',' +
+                dr +
+                ' 0 0,' +
+                sweepFlag +
+                ' ' +
+                targetX +
+                ',' +
+                targetY
+            )
+            .attr('marker-end', 'url(#arrow)');
         }
-        let dx = targetX - sourceX;
-        let dy = targetY - sourceY;
-        let dr = Math.sqrt(dx * dx + dy * dy);
-        d3.select('#memory')
-          .select('#arrows')
-          .append('path')
-          .attr('style', 'stroke:#858585; fill:none; stroke-width:2;')
-          .attr(
-            'd',
-            'M' +
-              sourceX +
-              ',' +
-              sourceY +
-              'A' +
-              dr +
-              ',' +
-              dr +
-              ' 0 0,1 ' +
-              targetX +
-              ',' +
-              targetY
-          );
       }
     });
   }
@@ -396,19 +428,19 @@ export default class Memory extends React.Component<Props, State> {
     const physical = this.renderPhysicalView();
     if (this.props.memoryView === 'logical') {
       return (
-        <g>
+        <g className="content">
           <g>{stack}</g>
           <g>{heap}</g>
         </g>
       );
     } else if (this.props.memoryView === 'physical') {
       return (
-        <g>
+        <g className="content">
           <g>{physical}</g>
         </g>
       );
     } else {
-      return <g></g>;
+      return <g className="content"></g>;
     }
   }
 }

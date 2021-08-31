@@ -34,7 +34,7 @@ function renderArrow(stackName) {
   let sourceY = Number(source.attr('y')) + 0.2 * Number(source.attr('height'));
   let transform = target.attr('transform').replace(')', '').split(',');
   target = target.select('rect');
-  let targetX = Number(target.attr('x')) + Number(transform[4]);
+  let targetX = Number(target.attr('x')) + Number(transform[4]) - 6;
   let targetY = Number(target.attr('y')) + Number(transform[5]) + 30;
   let temp = sourceX - targetX;
   temp = Math.max(temp, -temp);
@@ -61,7 +61,8 @@ function renderArrow(stackName) {
         targetX +
         ',' +
         targetY
-    );
+    )
+    .attr('marker-end', 'url(#arrow)');
 }
 
 export default class BlockContent extends React.Component<Props, State> {

@@ -64,6 +64,17 @@ export default class Svg extends React.Component<Props, State> {
                 height={0.99 * this.props.height - 310}
                 id="svg"
               >
+                <marker
+                  id="arrow"
+                  viewBox="0 -5 10 10"
+                  refX="15"
+                  refY="-1.5"
+                  markerWidth="6"
+                  markerHeight="6"
+                  orient="auto"
+                >
+                  <path d="M0,-5L10,0L0,5"></path>
+                </marker>
                 <g id="path"></g>
                 <BlockContent
                   blockDrawer={new BlockDrawer(this.state.execState)}
@@ -111,11 +122,22 @@ export default class Svg extends React.Component<Props, State> {
                   width={0.28 * this.props.width}
                   height={0.99 * this.props.height - 350}
                 >
+                  <marker
+                    id="arrow"
+                    viewBox="0 -5 10 10"
+                    refX="15"
+                    refY="-1.5"
+                    markerWidth="6"
+                    markerHeight="6"
+                    orient="auto"
+                  >
+                    <path d="M0,-5L10,0L0,5"></path>
+                  </marker>
+                  <g id="arrows"></g>
                   <Memory
                     memoryDrawer={new MemoryDrawer(this.state.execState)}
                     memoryView={this.state.memoryView}
                   />
-                  <g id="arrows"></g>
                 </svg>
                 {/* <AnimationContent
                   animationDrawer={
