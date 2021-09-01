@@ -28,7 +28,7 @@ export function str_pad(hex) {
 
 export class MemoryDrawer {
   private svgStackTable: any = {};
-  private svgHeapTable: any = { heap: [], global: [], const: [] };
+  private svgHeapTable: any = { heap: [], global: [] };
   private physicalTable: any = { data: [] };
   private arrowList: any = [];
   private variableDic: any = {};
@@ -97,13 +97,12 @@ export class MemoryDrawer {
     });
     y = this.originY;
     Object.keys(this.svgHeapTable).forEach((key) => {
-      if (this.svgHeapTable[key].length > 0) {
-        y += this.offsetY * 2;
-        this.svgHeapTable[key].forEach((cell) => {
-          cell.setPos((this.originX + this.offsetX) * 2 + this.width, y);
-          y += cell.getHeight();
-        });
-      }
+      y += this.offsetY;
+      this.svgHeapTable[key].forEach((cell) => {
+        cell.setPos((this.originX + this.offsetX) * 2 + this.width, y);
+        y += cell.getHeight();
+      });
+      y += this.offsetY;
     });
   }
 

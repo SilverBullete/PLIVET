@@ -7,7 +7,7 @@ import {
   ArrowLeftOutlined,
   ArrowRightOutlined,
   RedoOutlined,
-  CaretRightOutlined,
+  PauseOutlined,
 } from '@ant-design/icons';
 
 import { DEBUG_STATE } from '../../server';
@@ -138,7 +138,7 @@ export default class ControlPanel extends React.Component<Props, State> {
             disabled={!this.state.StepBack}
           ></Button>
           <Button
-            icon={<ArrowRightOutlined />}
+            icon={this.state.Stop ? <ArrowRightOutlined /> : <PauseOutlined />}
             onClick={() => signal('debug', this.state.Stop ? 'Step' : 'Start')}
             disabled={!this.state.Step}
           ></Button>

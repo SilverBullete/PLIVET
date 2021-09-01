@@ -22,21 +22,15 @@ export default class App extends React.Component<Props, State> {
     const { lang, progLang, theme } = this.props;
     return (
       <Grid fluid={true}>
-        <Row style={{ margin: '5px' }}>
+        <Row style={{ margin: '0px' }}>
           <Col
-            lg={3}
-            md={4}
-            sm={5}
-            xs={12}
+            md={3}
             className={theme === 'light' ? 'theme-light' : 'theme-gray'}
           >
             <EditorSide lang={lang} progLang={progLang} />
           </Col>
           <Col
-            lg={9}
-            md={8}
-            sm={7}
-            xs={12}
+            md={9}
             className={theme === 'light' ? 'theme-light' : 'theme-gray'}
           >
             <SvgSide lang={lang} />

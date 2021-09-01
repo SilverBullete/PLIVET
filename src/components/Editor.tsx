@@ -380,7 +380,7 @@ export default class Editor extends React.Component<Props, State> {
           showLineNumbers: true,
           readOnly: false,
         }}
-        style={{ height: '62vh', width: '24vw' }}
+        style={{ height: '100%', width: '100%' }}
         className="editorMain"
         onChange={(text: string) => {
           this.sourcecode = text;

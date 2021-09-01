@@ -9,7 +9,7 @@
     position: absolute;
     display: inline-block;
     height: calc(99vh - 280px);
-    top: 250px;
+    top: 280px;
 }
 
 .left{
@@ -22,7 +22,17 @@
 
 #keyframe{
     position: absolute;
-    top:1vh;
+    top:20px;
     width: 100%;
     height: 232px;
+}
+
+.ant-descriptions-item-label{
+    width: 30%;
+    min-width: 100px;
+}
+
+.ant-descriptions-item-content{
+    width: 70%;
+    min-width: 200px;
 }

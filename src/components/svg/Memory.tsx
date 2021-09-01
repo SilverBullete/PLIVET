@@ -54,30 +54,26 @@ export default class Memory extends React.Component<Props, State> {
   }
 
   clickHandle(cell) {
-    const container = d3.select('#container');
-    container.select('div').remove();
-    const div = container.append('div');
-    div
-      .append('div')
-      .append('span')
-      .text(`Function Name: ${cell.getStackName().split('.')[0]}`);
-    div
-      .append('div')
-      .append('span')
-      .text(
-        `Depth: ${
-          cell.getStackName().split('.').length > 1
-            ? cell.getStackName().split('.')[1]
-            : 1
-        }`
-      );
-    div.append('div').append('span').text(`Variable Name: ${cell.getName()}`);
-    div
-      .append('div')
-      .append('span')
-      .text(`Address: ${str_pad(cell.getAddress().toString(16))}`);
-    div.append('div').append('span').text(`Type: ${cell.getType()}`);
-    div.append('div').append('span').text(`Value: ${cell.getValue()}`);
+    const container = d3
+      .select('#container')
+      .select('.ant-descriptions-view')
+      .select('table')
+      .select('tbody');
+    const info = [];
+    info.push(cell.getStackName().split('.')[0]);
+    info.push(cell.getName());
+    info.push(str_pad(cell.getAddress().toString(16)));
+    info.push(cell.getType());
+    info.push(cell.getValue());
+    info.push('');
+    container
+      .selectAll('tr')
+      .data(info)
+      .select('td')
+      .select('span')
+      .text((d) => {
+        return d;
+      });
   }
 
   renderStack() {
@@ -118,6 +114,9 @@ export default class Memory extends React.Component<Props, State> {
               height={cell.getHeight()}
               fill="white"
               style={{ stroke: 'black', strokeWidth: '1.5px' }}
+              onClick={() => {
+                this.clickHandle(cell);
+              }}
             />
             <text x={cell.x() + 10} y={cell.y() + 15} fontSize="15">
               {cell.getType()}
@@ -179,77 +178,76 @@ export default class Memory extends React.Component<Props, State> {
     const offsetY = memoryDrawer.getOffsetY();
     const list: JSX.Element[] = [];
     let x = (originX + offsetX) * 1.5 + width * 1.2;
-    let startY = 0;
+    let startY = -20;
     let name = '';
     Object.keys(svgHeapTable).forEach((key) => {
-      if (svgHeapTable[key].length > 0) {
-        switch (key) {
-          case 'global':
-            name = 'Global/Static';
-            break;
-          case 'heap':
-            name = 'Heap';
-            break;
-          case 'const':
-            name = 'Const';
-            break;
-        }
-        const variables: JSX.Element[] = [];
-        svgHeapTable[key].forEach((cell, i) => {
-          if (i === 0) {
-            startY = cell.y();
-          }
-          variables.push(
-            <g
-              className={`memory-${
-                cell.getStackName().split('.')[0]
-              }-${cell.getName()}`}
-              id={`memory-${cell.getStackName()}-${cell.getName()}`.replace(
-                /[&\|\\\*:^%$@()\[\].]/g,
-                '_'
-              )}
-            >
-              <rect
-                x={cell.x()}
-                y={cell.y()}
-                width={width}
-                height={cell.getHeight()}
-                fill="white"
-                style={{ stroke: 'black', strokeWidth: '1.5px' }}
-              />
-              <text x={cell.x() + 10} y={cell.y() + 15} fontSize="15">
-                {cell.getType()}
-              </text>
-              <text
-                x={cell.x() - 3}
-                y={cell.y() + cell.getHeight() / 2}
-                fontSize="15"
-                textAnchor="end"
-                className="memory-name"
-              >
-                {name === 'Heap' ? '' : cell.getName()}
-              </text>
-              <text
-                x={cell.x() + width - 5}
-                y={cell.getHeight() > 20 ? cell.y() + 35 : cell.y() + 15}
-                fontSize="15"
-                textAnchor="end"
-                className="memory-value"
-              >
-                {cell.getValue()}
-              </text>
-            </g>
-          );
-        });
-        list.push(
-          <React.Fragment>
-            <text x={x} y={startY - 25} fontSize="20">
-              {name}
-            </text>
-            {variables}
-          </React.Fragment>
-        );
+      startY = startY + 40;
+      switch (key) {
+        case 'global':
+          name = 'Global/Static';
+          break;
+        case 'heap':
+          name = 'Heap';
+          break;
       }
+      const variables: JSX.Element[] = [];
+      svgHeapTable[key].forEach((cell, i) => {
+        if (i === 0) {
+          startY = cell.y() - 25;
+        }
+        variables.push(
+          <g
+            className={`memory-${
+              cell.getStackName().split('.')[0]
+            }-${cell.getName()}`}
+            id={`memory-${cell.getStackName()}-${cell.getName()}`.replace(
+              /[&\|\\\*:^%$@()\[\].]/g,
+              '_'
+            )}
+          >
+            <rect
+              x={cell.x()}
+              y={cell.y()}
+              width={width}
+              height={cell.getHeight()}
+              fill="white"
+              style={{ stroke: 'black', strokeWidth: '1.5px' }}
+              onClick={() => {
+                this.clickHandle(cell);
+              }}
+            />
+            <text x={cell.x() + 10} y={cell.y() + 15} fontSize="15">
+              {cell.getType()}
+            </text>
+            <text
+              x={cell.x() - 3}
+              y={cell.y() + cell.getHeight() / 2}
+              fontSize="15"
+              textAnchor="end"
+              className="memory-name"
+            >
+              {name === 'Heap' ? '' : cell.getName()}
+            </text>
+            <text
+              x={cell.x() + width - 5}
+              y={cell.getHeight() > 20 ? cell.y() + 35 : cell.y() + 15}
+              fontSize="15"
+              textAnchor="end"
+              className="memory-value"
+            >
+              {cell.getValue()}
+            </text>
+          </g>
+        );
+      });
+      list.push(
+        <React.Fragment>
+          <text x={x} y={startY} fontSize="20">
+            {name}
+          </text>
+          {variables}
+        </React.Fragment>
+      );
     });
     return list;
   }

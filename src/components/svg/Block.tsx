@@ -59,10 +59,9 @@ export default class Block extends React.Component<Props, State> {
           style={{ stroke: blockStack.getColor(), strokeWidth: '1.5px' }}
         ></rect>
         <text
-          x={blockStack.x() + 5}
+          x={blockStack.x() + 15}
           y={blockStack.y() + BlockCell.FONT_SIZE + 7}
           fontSize={BlockCell.FONT_SIZE + 2}
-          fontWeight="bold"
           fill={blockStack.getColor()}
         >
           {blockStack.key.split('.')[0]}

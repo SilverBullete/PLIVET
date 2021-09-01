@@ -89,6 +89,9 @@ export default class BlockContent extends React.Component<Props, State> {
   }
 
   componentWillUpdate(nextProps) {
+    d3.select('#stack__cloned').remove();
+    d3.select('#block__cloned').remove();
+    d3.select('#arrow__cloned').remove();
     const blockStacks = this.props.blockDrawer.getBlockStacks();
     const nextBlockStacks = nextProps.blockDrawer.getBlockStacks();
     console.log(this.props.blockDrawer, nextProps.blockDrawer);

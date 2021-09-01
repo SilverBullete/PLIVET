@@ -11,6 +11,7 @@ selection.prototype.appendClone = selection_appendClone;
 
 interface Props {
   animationDrawer: AnimationDrawer;
+  changeMemory: boolean;
 }
 
 interface State {}
@@ -18,6 +19,13 @@ interface State {}
 export default class AnimationContent extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
+  }
+
+  shouldComponentUpdate(nextProps) {
+    if (nextProps.changeMemory[0]) {
+      return false;
+    }
+    return true;
   }
 
   componentDidUpdate(prevProps) {

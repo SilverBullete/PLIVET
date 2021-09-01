@@ -9,8 +9,7 @@ import Memory from './Memory';
 import BlockContent from './BlockContent';
 import AnimationContent from './AnimationContent';
 import { MDBCard, MDBCardHeader, MDBCardBody } from 'mdb-react-ui-kit';
-import * as d3 from 'd3';
-import { Radio, Affix } from 'antd';
+import { Radio, Descriptions } from 'antd';
 import PerfectScrollbar from 'react-perfect-scrollbar';
 import KeyframeContent from './KeyframeContent';
 
@@ -22,7 +21,7 @@ interface State {
   execState?: ExecState;
   lastState?: ExecState;
   memoryView: string;
-  affixRef?: any;
+  changeMemory: any;
 }
 
 export default class Svg extends React.Component<Props, State> {
@@ -31,7 +30,7 @@ export default class Svg extends React.Component<Props, State> {
     this.state = {
       execState: undefined,
       memoryView: 'logical',
-      affixRef: React.createRef(),
+      changeMemory: [false],
     };
     slot('draw', (execState: ExecState, lastState: ExecState) =>
       this.setState({ execState, lastState })
@@ -39,29 +38,33 @@ export default class Svg extends React.Component<Props, State> {
   }
 
   changeHandel = (e) => {
-    this.setState({ memoryView: e.target.value });
+    this.setState({ memoryView: e.target.value, changeMemory: [true] });
   };
+
+  componentDidUpdate() {
+    this.state.changeMemory[0] = false;
+  }
 
   render() {
     return (
       <div id="display">
         <div id="keyframe">
           <MDBCard border="#ececec">
-            <MDBCardHeader style={{ fontSize: 15 }}>Keyframe</MDBCardHeader>
+            <MDBCardHeader style={{ fontSize: 20 }}>Keyframe</MDBCardHeader>
             <MDBCardBody style={{}}>
               <KeyframeContent></KeyframeContent>
             </MDBCardBody>
           </MDBCard>
         </div>
         <div className="left">
-          <MDBCard border="#ececec">
-            <MDBCardHeader style={{ fontSize: 15 }}>
+          <MDBCard border="#ececec" style={{ height: '100%' }}>
+            <MDBCardHeader style={{ fontSize: 20 }}>
               Calling Stack
             </MDBCardHeader>
-            <MDBCardBody style={{ height: 0.99 * this.props.height - 290 }}>
+            <MDBCardBody style={{ height: '100%' }}>
               <svg
                 width={0.65 * this.props.width}
-                height={0.99 * this.props.height - 310}
+                height={0.98 * this.props.height - 330}
                 id="svg"
               >
                 <marker
@@ -73,7 +76,7 @@ export default class Svg extends React.Component<Props, State> {
                   markerHeight="6"
                   orient="auto"
                 >
-                  <path d="M0,-5L10,0L0,5"></path>
+                  <path d="M0,-5L10,0L0,5" style={{ stroke: '#858585' }}></path>
                 </marker>
                 <g id="path"></g>
                 <BlockContent
@@ -84,8 +87,8 @@ export default class Svg extends React.Component<Props, State> {
           </MDBCard>
         </div>
         <div className="right">
-          <MDBCard border="#ececec">
-            <MDBCardHeader style={{ fontSize: 15 }}>
+          <MDBCard border="#ececec" style={{ height: '100%' }}>
+            <MDBCardHeader style={{ fontSize: 20 }}>
               Memory Allocation
             </MDBCardHeader>
             <Radio.Group
@@ -97,58 +100,75 @@ export default class Svg extends React.Component<Props, State> {
               <Radio.Button value="logical">Logical view</Radio.Button>
               <Radio.Button value="physical">Physical view</Radio.Button>
             </Radio.Group>
-            {this.state.memoryView === 'physical' ? (
+            <MDBCardBody>
               <div
-                id="container"
                 style={{
-                  position: 'absolute',
-                  top: 150,
-                  left: 230,
-                  fontSize: 20,
-                }}
-              ></div>
-            ) : (
-              ''
-            )}
-
-            <PerfectScrollbar>
-              <MDBCardBody
-                style={{
-                  height: 0.99 * this.props.height - 330,
+                  height: 0.98 * this.props.height - 670,
                 }}
               >
-                <svg
-                  id="memory"
-                  width={0.28 * this.props.width}
-                  height={0.99 * this.props.height - 350}
-                >
-                  <marker
-                    id="arrow"
-                    viewBox="0 -5 10 10"
-                    refX="15"
-                    refY="-1.5"
-                    markerWidth="6"
-                    markerHeight="6"
-                    orient="auto"
+                <PerfectScrollbar>
+                  <svg
+                    id="memory"
+                    width={0.3 * this.props.width - 35}
+                    height={0}
                   >
-                    <path d="M0,-5L10,0L0,5"></path>
-                  </marker>
-                  <g id="arrows"></g>
-                  <Memory
-                    memoryDrawer={new MemoryDrawer(this.state.execState)}
-                    memoryView={this.state.memoryView}
+                    <marker
+                      id="arrow"
+                      viewBox="0 -5 10 10"
+                      refX="15"
+                      refY="-1.5"
+                      markerWidth="6"
+                      markerHeight="6"
+                      orient="auto"
+                    >
+                      <path
+                        d="M0,-5L10,0L0,5"
+                        style={{ stroke: '#858585' }}
+                      ></path>
+                    </marker>
+                    <g id="arrows"></g>
+                    <Memory
+                      memoryDrawer={new MemoryDrawer(this.state.execState)}
+                      memoryView={this.state.memoryView}
+                    />
+                  </svg>
+                  <AnimationContent
+                    animationDrawer={
+                      new AnimationDrawer(
+                        this.state.execState,
+                        this.state.lastState
+                      )
+                    }
+                    changeMemory={this.state.changeMemory}
                   />
-                </svg>
-                <AnimationContent
-                  animationDrawer={
-                    new AnimationDrawer(
-                      this.state.execState,
-                      this.state.lastState
-                    )
-                  }
-                />
-              </MDBCardBody>
-            </PerfectScrollbar>
+                </PerfectScrollbar>
+              </div>
+            </MDBCardBody>
+            <div
+              id="container"
+              style={{
+                position: 'absolute',
+                bottom: 10,
+                left: 20,
+                fontSize: 20,
+                width: 0.3 * this.props.width - 40,
+              }}
+            >
+              <Descriptions
+                bordered
+                title="Variable Information"
+                size="small"
+                column={1}
+                colon={false}
+              >
+                <Descriptions.Item label="Function Name"> </Descriptions.Item>
+                <Descriptions.Item label="Variable Name"> </Descriptions.Item>
+                <Descriptions.Item label="Address"> </Descriptions.Item>
+                <Descriptions.Item label="Type"> </Descriptions.Item>
+                <Descriptions.Item label="Value"> </Descriptions.Item>
+                <Descriptions.Item label="Binary Code"> </Descriptions.Item>
+              </Descriptions>
+            </div>
           </MDBCard>
         </div>
       </div>
