@@ -3,6 +3,10 @@ import { BlockDrawer, BlockStack } from './BlockDrawer';
 import Block from './Block';
 import * as d3 from 'd3';
 import { inArray } from 'jquery';
+import { selection } from 'd3-selection';
+import selection_appendClone from 'd3-clone/src/clone/append';
+
+selection.prototype.appendClone = selection_appendClone;
 
 interface Props {
   blockDrawer: BlockDrawer;
@@ -27,7 +31,7 @@ function dragged(d: any) {
   renderArrow(stackName);
 }
 
-function renderArrow(stackName) {
+export function renderArrow(stackName) {
   let source = d3.select('#svg').select(`#stack_${stackName}`).select('rect');
   let target = d3.select('#svg').select(`#block_${stackName}`);
   let sourceX = Number(source.attr('x')) + 0.8 * Number(source.attr('width'));
@@ -85,15 +89,55 @@ export default class BlockContent extends React.Component<Props, State> {
   }
 
   componentWillUpdate(nextProps) {
-    // const blockStacks = this.props.blockDrawer.getBlockStacks();
-    // const nextBlockStacks = nextProps.blockDrawer.getBlockStacks();
-    // const blockStacksLen = blockStacks.length;
-    // const nextBlockStacksLen = nextBlockStacks.length;
-    // if (blockStacksLen > nextBlockStacksLen) {
-    //   for (let i = nextBlockStacksLen; i < blockStacksLen; i++) {
-    //     nextProps.blockDrawer.addBlockStack(blockStacks[i]);
-    //   }
-    // }
+    const blockStacks = this.props.blockDrawer.getBlockStacks();
+    const nextBlockStacks = nextProps.blockDrawer.getBlockStacks();
+    console.log(this.props.blockDrawer, nextProps.blockDrawer);
+
+    const blockStacksLen = blockStacks.length;
+    const nextBlockStacksLen = nextBlockStacks.length;
+    if (blockStacksLen > nextBlockStacksLen) {
+      for (let i = nextBlockStacksLen; i < blockStacksLen; i++) {
+        const clonedStack = d3
+          .select('#svg')
+          .appendClone(
+            d3.select('#stack_' + blockStacks[i].key.replace('.', '_'))
+          );
+        clonedStack.attr('id', 'stack__cloned');
+        const clonedBlock = d3
+          .select('#svg')
+          .appendClone(
+            d3.select('#block_' + blockStacks[i].key.replace('.', '_'))
+          );
+        clonedBlock.select('rect').style('stroke', 'black');
+        clonedBlock.select('text').style('fill', 'black');
+        clonedBlock.selectAll('rect').attr('y', function () {
+          return (
+            Number(d3.select(this).attr('y')) + blockStacks[i].getHeight() + 40
+          );
+        });
+        clonedBlock.selectAll('text').attr('y', function () {
+          return (
+            Number(d3.select(this).attr('y')) + blockStacks[i].getHeight() + 40
+          );
+        });
+        clonedBlock.selectAll('tspan').attr('y', function () {
+          return (
+            Number(d3.select(this).attr('y')) + blockStacks[i].getHeight() + 40
+          );
+        });
+        const block = d3.select(
+          '#block_' + blockStacks[i].key.replace('.', '_')
+        );
+        clonedBlock.attr('id', 'block__cloned');
+        const list = [];
+        block.selectAll('g').attr('copy', function () {
+          list.push(d3.select(this).attr('id'));
+        });
+        clonedBlock.selectAll('g').attr('id', function (d, i) {
+          return 'cloned-' + list[i];
+        });
+      }
+    }
     const arrowListJson = sessionStorage.getItem('arrowList');
     let arrowList = JSON.parse(arrowListJson);
     if (!arrowList) {

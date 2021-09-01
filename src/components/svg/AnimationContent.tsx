@@ -5,6 +5,7 @@ import { inArray } from 'jquery';
 import { BlockCell } from './BlockDrawer';
 import { selection } from 'd3-selection';
 import selection_appendClone from 'd3-clone/src/clone/append';
+import { renderArrow } from './BlockContent';
 
 selection.prototype.appendClone = selection_appendClone;
 
@@ -19,53 +20,22 @@ export default class AnimationContent extends React.Component<Props, State> {
     super(props);
   }
 
-  componentWillUpdate(newProps) {
-    const { destroyList, addList } = this.compareProps(this.props, newProps);
-    destroyList.forEach((item) => {
-      d3.select('#' + item)
-        .style('fill-opacity', 1)
-        .style('stroke-opacity', 1)
-        .style('display', 'inline')
-        .transition()
-        .duration(2000)
-        .style('fill-opacity', 1e-6)
-        .style('stroke-opacity', 1e-6);
-      d3.select('#' + item)
-        .transition()
-        .delay(2000)
-        .style('display', 'none');
-    });
-  }
-
   componentDidUpdate(prevProps) {
-    const { destroyList, addList } = this.compareProps(prevProps, this.props);
-    console.log(addList);
-
-    addList.forEach((item) => {
-      d3.select('#' + item)
-        .style('display', 'inline')
-        .style('fill-opacity', 1)
-        .style('stroke-opacity', 1);
-    });
     const { animationDrawer } = this.props;
     const exeState = animationDrawer.getState();
-    console.log(exeState);
 
     switch (exeState) {
       case 'programInit':
         this.programInit();
         break;
-      // case 'uniReturn':
-      //   this.uniReturn();
-      //   break;
+      case 'uniReturn':
+        this.uniReturn();
+        break;
       case 'methodCall':
         this.methodCall();
         break;
       default:
         this.variablesInit();
-      // case 'variablesInit':
-      //   this.variablesInit();
-      //   break;
     }
   }
 
@@ -127,54 +97,91 @@ export default class AnimationContent extends React.Component<Props, State> {
         };
       });
 
-    // postArgs.forEach((arg, idx) => {
-    //   let source = 0;
-    //   if (arg === undefined) {
-    //     d3.select('#' + keys[idx])
-    //       .select('rect')
-    //       .style('stroke-dasharray', '0,25');
-    //     d3.select('#' + keys[idx])
-    //       .select('rect')
-    //       .transition()
-    //       .duration(2000)
-    //       .styleTween('stroke-dasharray', function () {
-    //         return d3.interpolateArray([0, 25], [25, 0]);
-    //       });
-    //   } else {
-    //     const cloned = d3
-    //       .select('#svg')
-    //       .appendClone(d3.select('#' + postArgs[idx]));
-    //     cloned.select('text').remove();
-    //     const target = d3.select('#' + keys[idx]);
-    //     target
-    //       .select('rect')
-    //       .style('display', 'none')
-    //       .transition()
-    //       .delay(1000)
-    //       .style('display', 'inline');
-    //     target
-    //       .selectAll('.value')
-    //       .style('display', 'none')
-    //       .transition()
-    //       .delay(1000)
-    //       .style('display', 'inline');
-    //     cloned
-    //       .select('rect')
-    //       .transition()
-    //       .duration(1000)
-    //       .attr('x', target.select('rect').attr('x'))
-    //       .attr('y', Number(target.select('rect').attr('y')) + 250);
-    //     cloned
-    //       .selectAll('.value')
-    //       .transition()
-    //       .duration(1000)
-    //       .attr('x', target.selectAll('.value').attr('x'))
-    //       .attr('y', Number(target.selectAll('.value').attr('y')) + 250);
-    //     cloned.transition().delay(1000).remove();
-    //     source = cloned.select('.value').text();
-    //   }
-    //   this.variableChange(keys[idx], types[idx], values[idx], source, 1000);
-    // });
+    postArgs.forEach((arg, idx) => {
+      if (arg !== undefined) {
+        const cloned = d3
+          .select('#svg')
+          .appendClone(d3.select('#block-' + keys[idx]));
+        cloned.select('text').remove();
+        const source = d3.select('#block-' + postArgs[idx]);
+        const transform = d3
+          .select('#block_' + postArgs[idx].split('-')[0])
+          .attr('transform')
+          .replace('matrix(', '')
+          .replace(')', '')
+          .split(',');
+        cloned
+          .select('rect')
+          .attr(
+            'x',
+            Number(transform[4]) + Number(source.select('rect').attr('x'))
+          );
+        cloned
+          .select('rect')
+          .attr(
+            'y',
+            Number(transform[5]) + Number(source.select('rect').attr('y'))
+          );
+        cloned
+          .selectAll('.value')
+          .attr(
+            'x',
+            Number(transform[4]) + Number(source.select('.value').attr('x'))
+          );
+        cloned
+          .selectAll('.value')
+          .attr(
+            'y',
+            Number(transform[5]) + Number(source.select('.value').attr('y'))
+          );
+        const target = d3.select('#block-' + keys[idx]);
+        const targetTransform = d3
+          .select('#block_' + keys[idx].split('-')[0])
+          .attr('transform')
+          .replace('matrix(', '')
+          .replace(')', '')
+          .split(',');
+        target
+          .select('rect')
+          .style('display', 'none')
+          .transition()
+          .delay(1000)
+          .style('display', 'inline');
+        target
+          .selectAll('.value')
+          .style('display', 'none')
+          .transition()
+          .delay(1000)
+          .style('display', 'inline');
+        cloned
+          .select('rect')
+          .transition()
+          .duration(1000)
+          .attr(
+            'x',
+            Number(target.select('rect').attr('x')) + Number(targetTransform[4])
+          )
+          .attr(
+            'y',
+            Number(target.select('rect').attr('y')) + Number(targetTransform[5])
+          );
+        cloned
+          .selectAll('.value')
+          .transition()
+          .duration(1000)
+          .attr(
+            'x',
+            Number(target.selectAll('.value').attr('x')) +
+              Number(targetTransform[4])
+          )
+          .attr(
+            'y',
+            Number(target.selectAll('.value').attr('y')) +
+              Number(targetTransform[5])
+          );
+        cloned.transition().delay(1000).remove();
+      }
+    });
   }
 
   variableChange(key, type, value, source, delay) {
@@ -259,10 +266,8 @@ export default class AnimationContent extends React.Component<Props, State> {
     const len = animationDrawer.getVariableKeys().length;
     if (len === 0) return;
     const key = animationDrawer.getVariableKeys()[len - 1];
-    const type = animationDrawer.getVariableTypes()[len - 1];
-    const value = animationDrawer.getVariableValues()[len - 1];
-
-    const target = d3.select('#' + key);
+    renderArrow('_cloned');
+    const target = d3.select('#block-' + key);
     target
       .select('rect')
       .style('display', 'none')
@@ -275,7 +280,9 @@ export default class AnimationContent extends React.Component<Props, State> {
       .transition()
       .delay(1000)
       .style('display', 'inline');
-    const cloned = d3.select('#svg').appendClone(d3.select('#' + postArgs[0]));
+    const cloned = d3
+      .select('#svg')
+      .appendClone(d3.select('#cloned-block-' + postArgs[0]));
     cloned.select('rect').style('fill-opacity', 1).style('stroke-opacity', 1);
     cloned
       .selectAll('.value')
@@ -294,9 +301,10 @@ export default class AnimationContent extends React.Component<Props, State> {
       .duration(1000)
       .attr('x', target.selectAll('.value').attr('x'))
       .attr('y', target.selectAll('.value').attr('y'));
-
+    d3.select('#stack__cloned').transition().delay(1000).remove();
+    d3.select('#block__cloned').transition().delay(1000).remove();
     cloned.transition().delay(1000).remove();
-    this.variableChange(key, type, value, cloned.select('.value').text(), 1000);
+    d3.select('#arrow__cloned').transition().delay(1000).remove();
   }
 
   compareProps(prevProps: Props, newProps: Props) {
