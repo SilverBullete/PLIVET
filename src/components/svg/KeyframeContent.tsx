@@ -309,8 +309,8 @@ export default class KeyframeContent extends React.Component<Props, State> {
                 scale={this.state.scale}
                 width={600}
                 height={100}
-                selectedColor="#0074D9"
-                unselectedColor="#DDDDDD"
+                selectedColor="#DDDDDD"
+                unselectedColor="#0074D9"
                 variablesHighlight={this.state.variablesHighlight}
                 statementsHighlight={this.state.statementsHighlight}
               />

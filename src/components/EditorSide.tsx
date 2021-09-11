@@ -32,7 +32,7 @@ export default class EditorSide extends React.Component<Props, State> {
       <Row>
         <PageHeader
           className="site-page-header"
-          title="Civis"
+          title="VAPL"
           style={{ fontSize: 25, height: '6vh' }}
         />
         <Col lg={12} md={12} sm={12} xs={12}>

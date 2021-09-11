@@ -28,12 +28,16 @@ function dragged(d: any) {
     return 'matrix(1,0,0,1,' + tx + ',' + ty + ')';
   });
   d3.select('#svg').select(`#arrow_${stackName}`).remove();
-  renderArrow(stackName);
+  renderArrow(stackName, stackName);
 }
 
-export function renderArrow(stackName) {
-  let source = d3.select('#svg').select(`#stack_${stackName}`).select('rect');
-  let target = d3.select('#svg').select(`#block_${stackName}`);
+export function renderArrow(sourceStackName, targetStackName) {
+  d3.select('#svg').select(`#arrow_${sourceStackName}`).remove();
+  let source = d3
+    .select('#svg')
+    .select(`#stack_${sourceStackName}`)
+    .select('rect');
+  let target = d3.select('#svg').select(`#block_${targetStackName}`);
   let sourceX = Number(source.attr('x')) + 0.8 * Number(source.attr('width'));
   let sourceY = Number(source.attr('y')) + 0.2 * Number(source.attr('height'));
   let transform = target.attr('transform').replace(')', '').split(',');
@@ -46,7 +50,7 @@ export function renderArrow(stackName) {
     .select('#path')
     .append('path')
     .attr('style', 'stroke:#858585; fill:none; stroke-width:2;')
-    .attr('id', `arrow_${stackName}`)
+    .attr('id', `arrow_${sourceStackName}`)
     .attr(
       'd',
       'M' +
@@ -94,51 +98,67 @@ export default class BlockContent extends React.Component<Props, State> {
     d3.select('#arrow__cloned').remove();
     const blockStacks = this.props.blockDrawer.getBlockStacks();
     const nextBlockStacks = nextProps.blockDrawer.getBlockStacks();
-    console.log(this.props.blockDrawer, nextProps.blockDrawer);
 
-    const blockStacksLen = blockStacks.length;
-    const nextBlockStacksLen = nextBlockStacks.length;
-    if (blockStacksLen > nextBlockStacksLen) {
-      for (let i = nextBlockStacksLen; i < blockStacksLen; i++) {
-        const clonedStack = d3
-          .select('#svg')
-          .appendClone(
-            d3.select('#stack_' + blockStacks[i].key.replace('.', '_'))
+    if (sessionStorage.getItem('exec') !== 'step') {
+      const blockStacksLen = blockStacks.length;
+      const nextBlockStacksLen = nextBlockStacks.length;
+      if (blockStacksLen > nextBlockStacksLen) {
+        for (let i = nextBlockStacksLen; i < blockStacksLen; i++) {
+          const clonedStack = d3
+            .select('#svg')
+            .appendClone(
+              d3.select('#stack_' + blockStacks[i].key.replace('.', '_'))
+            );
+          clonedStack.attr('id', 'stack__cloned');
+          const clonedBlock = d3
+            .select('#svg')
+            .appendClone(
+              d3.select('#block_' + blockStacks[i].key.replace('.', '_'))
+            );
+          clonedBlock.select('rect').style('stroke', 'black');
+          clonedBlock.select('text').style('fill', 'black');
+          clonedBlock.selectAll('rect').attr('y', function () {
+            return (
+              Number(d3.select(this).attr('y')) +
+              blockStacks[i].getHeight() +
+              40
+            );
+          });
+          clonedBlock.selectAll('text').attr('y', function () {
+            return (
+              Number(d3.select(this).attr('y')) +
+              blockStacks[i].getHeight() +
+              40
+            );
+          });
+          clonedBlock.selectAll('tspan').attr('y', function () {
+            return (
+              Number(d3.select(this).attr('y')) +
+              blockStacks[i].getHeight() +
+              40
+            );
+          });
+          const block = d3.select(
+            '#block_' + blockStacks[i].key.replace('.', '_')
           );
-        clonedStack.attr('id', 'stack__cloned');
+          clonedBlock.attr('id', 'block__cloned');
+          const list = [];
+          block.selectAll('g').attr('copy', function () {
+            list.push(d3.select(this).attr('id'));
+          });
+          clonedBlock.selectAll('g').attr('id', function (d, i) {
+            return 'cloned-' + list[i];
+          });
+        }
+      } else if (nextBlockStacksLen > blockStacksLen && blockStacksLen >= 2) {
         const clonedBlock = d3
           .select('#svg')
           .appendClone(
-            d3.select('#block_' + blockStacks[i].key.replace('.', '_'))
+            d3.select(
+              '#block_' + blockStacks[blockStacksLen - 2].key.replace('.', '_')
+            )
           );
-        clonedBlock.select('rect').style('stroke', 'black');
-        clonedBlock.select('text').style('fill', 'black');
-        clonedBlock.selectAll('rect').attr('y', function () {
-          return (
-            Number(d3.select(this).attr('y')) + blockStacks[i].getHeight() + 40
-          );
-        });
-        clonedBlock.selectAll('text').attr('y', function () {
-          return (
-            Number(d3.select(this).attr('y')) + blockStacks[i].getHeight() + 40
-          );
-        });
-        clonedBlock.selectAll('tspan').attr('y', function () {
-          return (
-            Number(d3.select(this).attr('y')) + blockStacks[i].getHeight() + 40
-          );
-        });
-        const block = d3.select(
-          '#block_' + blockStacks[i].key.replace('.', '_')
-        );
         clonedBlock.attr('id', 'block__cloned');
-        const list = [];
-        block.selectAll('g').attr('copy', function () {
-          list.push(d3.select(this).attr('id'));
-        });
-        clonedBlock.selectAll('g').attr('id', function (d, i) {
-          return 'cloned-' + list[i];
-        });
       }
     }
     const arrowListJson = sessionStorage.getItem('arrowList');
@@ -165,7 +185,7 @@ export default class BlockContent extends React.Component<Props, State> {
     const blockArrows = blockDrawer.getBlockArrows();
     blockArrows.forEach((stackName) => {
       if (!d3.select('#svg').select(`#block_${stackName}`).empty()) {
-        renderArrow(stackName);
+        renderArrow(stackName, stackName);
       }
     });
     const arrowListJson = sessionStorage.getItem('arrowList');
@@ -175,7 +195,7 @@ export default class BlockContent extends React.Component<Props, State> {
     }
     Object.keys(arrowList).forEach((stackName) => {
       if (!d3.select('#svg').select(`#block_${stackName}`).empty()) {
-        renderArrow(stackName);
+        renderArrow(stackName, stackName);
       }
     });
     const variablesMapJson = sessionStorage.getItem('variablesMap');

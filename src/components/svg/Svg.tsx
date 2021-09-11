@@ -123,7 +123,7 @@ export default class Svg extends React.Component<Props, State> {
                     >
                       <path
                         d="M0,-5L10,0L0,5"
-                        style={{ stroke: '#858585' }}
+                        style={{ fill: '#858585' }}
                       ></path>
                     </marker>
                     <g id="arrows"></g>
@@ -158,15 +158,23 @@ export default class Svg extends React.Component<Props, State> {
                 bordered
                 title="Variable Information"
                 size="small"
-                column={1}
+                column={2}
                 colon={false}
               >
                 <Descriptions.Item label="Function Name"> </Descriptions.Item>
                 <Descriptions.Item label="Variable Name"> </Descriptions.Item>
-                <Descriptions.Item label="Address"> </Descriptions.Item>
-                <Descriptions.Item label="Type"> </Descriptions.Item>
-                <Descriptions.Item label="Value"> </Descriptions.Item>
-                <Descriptions.Item label="Binary Code"> </Descriptions.Item>
+                <Descriptions.Item label="Address" span={2}>
+                  {' '}
+                </Descriptions.Item>
+                <Descriptions.Item label="Type" span={2}>
+                  {' '}
+                </Descriptions.Item>
+                <Descriptions.Item label="Value" span={2}>
+                  {' '}
+                </Descriptions.Item>
+                <Descriptions.Item label="Binary Code" span={2}>
+                  {' '}
+                </Descriptions.Item>
               </Descriptions>
             </div>
           </MDBCard>

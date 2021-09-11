@@ -25,6 +25,9 @@ export default class AnimationContent extends React.Component<Props, State> {
     if (nextProps.changeMemory[0]) {
       return false;
     }
+    if (sessionStorage.getItem('exec') === 'step') {
+      return false;
+    }
     return true;
   }
 
@@ -52,7 +55,7 @@ export default class AnimationContent extends React.Component<Props, State> {
       .style('fill-opacity', 1)
       .style('stroke-opacity', 1)
       .style('display', 'inline');
-    this.showUp('block_main');
+    this.showUp('block_main', 0);
   }
 
   variablesInit() {
@@ -67,7 +70,7 @@ export default class AnimationContent extends React.Component<Props, State> {
       const key = keys[i];
       console.log(key);
 
-      this.showUp('block-' + key);
+      this.showUp('block-' + key, 0);
       // this.variableChange(key, types[i], values[i], 0, 0);
     }
   }
@@ -77,10 +80,22 @@ export default class AnimationContent extends React.Component<Props, State> {
     const stackName = animationDrawer.getStackName();
     const postArgs = animationDrawer.getPostArgs();
     const keys = animationDrawer.getVariableKeys();
-    const types = animationDrawer.getVariableTypes();
-    const values = animationDrawer.getVariableValues();
-
-    this.showUp('block_' + stackName);
+    const stacks = animationDrawer.getStacks();
+    let height = 0;
+    const block1 = stacks[stacks.length - 2].name.replace(
+      /[&\|\\\*:^%$@()\[\].]/g,
+      '_'
+    );
+    const block2 = stacks[stacks.length - 1].name.replace(
+      /[&\|\\\*:^%$@()\[\].]/g,
+      '_'
+    );
+    const svgblock1 = d3.select('#block_' + block1);
+    const svgblock2 = d3.select('#block_' + block2);
+    if (stacks.length > 3) {
+      height = d3.select('#block__cloned').node().getBBox().height + 40;
+    }
+    this.showUp('block_' + stackName, height);
     const stack = d3.select('#stack_' + stackName);
     stack.attr('tansform', 'matrix(1,0,0,1,0,300)');
     stack
@@ -92,6 +107,18 @@ export default class AnimationContent extends React.Component<Props, State> {
           stack.attr('transform', `matrix(1,0,0,1,0,${i(t)})`);
         };
       });
+
+    if (stacks.length > 3) {
+      const cloned = stacks[stacks.length - 3].name.replace(
+        /[&\|\\\*:^%$@()\[\].]/g,
+        '_'
+      );
+      svgblock1.attr('transform', 'matrix(1,0,0,1,0,' + height + ')');
+      svgblock2.attr('transform', 'matrix(1,0,0,1,0,' + height + ')');
+      renderArrow(cloned, '_cloned');
+    }
+    renderArrow(block1, block1);
+    renderArrow(stackName, stackName);
     const arrow = d3.select('#arrow_' + stackName);
     arrow.style('opacity', 0);
     arrow
@@ -104,7 +131,6 @@ export default class AnimationContent extends React.Component<Props, State> {
           arrow.style('opacity', i(t));
         };
       });
-
     postArgs.forEach((arg, idx) => {
       if (arg !== undefined) {
         const cloned = d3
@@ -190,6 +216,55 @@ export default class AnimationContent extends React.Component<Props, State> {
         cloned.transition().delay(1000).remove();
       }
     });
+    if (stacks.length > 3) {
+      const cloned = stacks[stacks.length - 3].name.replace(
+        /[&\|\\\*:^%$@()\[\].]/g,
+        '_'
+      );
+      d3.select('#block__cloned')
+        .transition()
+        .delay(1000)
+        .duration(1000)
+        .tween('number', function () {
+          let i = d3.interpolateNumber(0, -height);
+          return function (t) {
+            d3.select('#block__cloned').attr(
+              'transform',
+              `matrix(1,0,0,1,0,${i(t)})`
+            );
+            renderArrow(cloned, '_cloned');
+          };
+        });
+      svgblock1
+        .transition()
+        .delay(1000)
+        .duration(1000)
+        .tween('number', function () {
+          let i = d3.interpolateNumber(height, 0);
+          return function (t) {
+            svgblock1.attr('transform', `matrix(1,0,0,1,0,${i(t)})`);
+            renderArrow(block1, block1);
+          };
+        });
+      svgblock2
+        .transition()
+        .delay(1000)
+        .duration(1000)
+        .tween('number', function () {
+          let i = d3.interpolateNumber(height, 0);
+          return function (t) {
+            svgblock2.attr('transform', `matrix(1,0,0,1,0,${i(t)})`);
+            renderArrow(block2, block2);
+          };
+        });
+      d3.select('#block__cloned').transition().delay(2000).remove();
+      // 删不掉 很奇怪
+      d3.select('#svg')
+        .select('#arrow_' + cloned)
+        .transition()
+        .delay(2000)
+        .remove();
+    }
   }
 
   variableChange(key, type, value, source, delay) {
@@ -234,7 +309,7 @@ export default class AnimationContent extends React.Component<Props, State> {
     }
   }
 
-  showUp(id) {
+  showUp(id, offsetY) {
     const block = d3.select('#svg').select('#' + id);
     const svg = d3.select('#svg');
     const rect = block.select('rect');
@@ -261,7 +336,9 @@ export default class AnimationContent extends React.Component<Props, State> {
         return function (t) {
           block.attr(
             'transform',
-            `matrix(${i(t)},0,0,${i(t)},${transform[4]},${transform[5]})`
+            `matrix(${i(t)},0,0,${i(t)},${transform[4]},${
+              transform[5] + offsetY
+            })`
           );
         };
       });
@@ -274,7 +351,7 @@ export default class AnimationContent extends React.Component<Props, State> {
     const len = animationDrawer.getVariableKeys().length;
     if (len === 0) return;
     const key = animationDrawer.getVariableKeys()[len - 1];
-    renderArrow('_cloned');
+    renderArrow('_cloned', '_cloned');
     const target = d3.select('#block-' + key);
     target
       .select('rect')

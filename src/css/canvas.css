@@ -29,10 +29,10 @@
 
 .ant-descriptions-item-label{
     width: 30%;
-    min-width: 100px;
+    min-width: 60px;
 }
 
 .ant-descriptions-item-content{
     width: 70%;
-    min-width: 200px;
+    min-width: 120px;
 }

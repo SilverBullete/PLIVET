@@ -60,18 +60,25 @@ export default class Memory extends React.Component<Props, State> {
       .select('table')
       .select('tbody');
     const info = [];
-    info.push(cell.getStackName().split('.')[0]);
-    info.push(cell.getName());
-    info.push(str_pad(cell.getAddress().toString(16)));
-    info.push(cell.getType());
-    info.push(cell.getValue());
-    info.push('');
+    const binaryCode = cell.binaryCode();
+    info.push([cell.getStackName().split('.')[0], cell.getName()]);
+    info.push([str_pad(cell.getAddress().toString(16))]);
+    info.push([cell.getType()]);
+    info.push([cell.getValue()]);
+    info.push([binaryCode[0] + '\n' + binaryCode[1] + '\n' + binaryCode[2]]);
     container
       .selectAll('tr')
       .data(info)
-      .select('td')
+      .selectAll('td')
+      .data((d) => {
+        return d;
+      })
       .select('span')
+      .data((d) => {
+        return d;
+      })
       .text((d) => {
+        console.log(d);
         return d;
       });
   }
@@ -324,6 +331,14 @@ export default class Memory extends React.Component<Props, State> {
               className="memory-value"
             >
               {cell.getValue()}
+            </text>
+            <text
+              x={originX + width + 5}
+              y={originY + offsetY * i + offsetY / 2}
+              fontSize="15"
+              className="memory-value"
+            >
+              {str_pad(cell.getAddress().toString(16))}
             </text>
           </g>
         );

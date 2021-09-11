@@ -88,6 +88,11 @@ export default class Editor extends React.Component<Props, State> {
 
     slot('debug', (controlEvent: CONTROL_EVENT, stdinText?: string) => {
       this.send(controlEvent, stdinText);
+      if (controlEvent === 'StepBack' || controlEvent === 'BackAll') {
+        sessionStorage.setItem('exec', 'step');
+      } else {
+        sessionStorage.setItem('exec', 'debug');
+      }
     });
     slot('jumpTo', (step: number) => {
       const request: Request = {
@@ -105,6 +110,7 @@ export default class Editor extends React.Component<Props, State> {
           // console.log(e);
           alert(e);
         });
+      sessionStorage.setItem('exec', 'step');
     });
     slot('EOF', (response: Response) => {
       this.recieve(response);

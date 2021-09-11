@@ -26,6 +26,30 @@ export function str_pad(hex) {
   return '0x' + zero.substr(0, tmp) + hex;
 }
 
+function binary(numStr, bytes) {
+  let zero = '00000000000000000000000000000000';
+  let tmp = 8 * bytes - numStr.length;
+  if (numStr.startsWith('-')) {
+    return '1' + zero.substr(0, tmp) + numStr.substr(1);
+  }
+  return zero.substr(0, tmp) + numStr;
+}
+
+function inverseCode(binaryCode) {
+  if (binaryCode.startsWith('0')) {
+    return binaryCode;
+  }
+  let res = '1';
+  for (let i = 1; i < binaryCode.length; i++) {
+    if (binaryCode[i] === '0') {
+      res += '1';
+    } else if (binaryCode[i] === '1') {
+      res += '0';
+    }
+  }
+  return res;
+}
+
 export class MemoryDrawer {
   private svgStackTable: any = {};
   private svgHeapTable: any = { heap: [], global: [] };
@@ -385,6 +409,28 @@ export class SvgMemoryCell {
       return str_pad(this.value.toString(16));
     }
     return this.value.toString();
+  }
+
+  public binaryCode() {
+    const res = [];
+    let num = this.value;
+    if (this.type.split('[').length > 1) {
+      num = this.address;
+    }
+    let str = Number(num).toString(2);
+    let binaryStr = binary(str, typeToHeight(this.getType()));
+    res.push(binaryStr.replace(/(\w{8})(?=\w)/g, '$1 '));
+    res.push(inverseCode(binaryStr).replace(/(\w{8})(?=\w)/g, '$1 '));
+    if (binaryStr.startsWith('0')) {
+      res.push(binaryStr.replace(/(\w{8})(?=\w)/g, '$1 '));
+    } else {
+      res.push(
+        inverseCode(
+          binary((Number(num) + 1).toString(2), typeToHeight(this.getType()))
+        ).replace(/(\w{8})(?=\w)/g, '$1 ')
+      );
+    }
+    return res;
   }
 
   public setValue(value: any) {
